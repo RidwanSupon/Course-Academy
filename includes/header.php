@@ -21,28 +21,46 @@ if(session_status() === PHP_SESSION_NONE){
 </head>
 
 <header class="ilm-bg-blue p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-lg">
-  <!-- Logo -->
-  <div class="flex items-center">
-    <img src="assets/images/logo.png" alt="Logo" class="h-10 mr-3">
+  
+  <!-- Left Side: Logo -->
+  <div class="flex items-center space-x-3">
+    <img src="assets/images/logo.png" alt="Logo" class="h-10">
     <span class="text-white text-lg font-bold">ILM PATH NETWORK</span>
   </div>
 
-  <!-- Desktop Navigation -->
-  <nav class="hidden md:flex space-x-6 text-white font-semibold">
+  <!-- Middle: Navigation Links (exact center) -->
+  <nav class="hidden md:flex space-x-6 text-white font-medium opacity-90 absolute left-1/2 transform -translate-x-1/2">
     <a href="index.php#home" class="hover:ilm-text-gold transition">Home</a>
     <a href="index.php#courses" class="hover:ilm-text-gold transition">Courses</a>
     <a href="index.php#mentors" class="hover:ilm-text-gold transition">Mentors</a>
     <a href="index.php#board" class="hover:ilm-text-gold transition">Board</a>
     <a href="index.php#gallery" class="hover:ilm-text-gold transition">Video & Gallery</a>
     <a href="index.php#e-books" class="hover:ilm-text-gold transition">E-books</a>
-
-    <?php if(isset($_SESSION['user_id'])): ?>
-        <span class="ml-4 font-semibold">Welcome - <?= htmlspecialchars($_SESSION['user_name']) ?></span>
-        <a href="logout.php" class="ilm-bg-gold text-ilm-blue px-4 py-2 rounded-full font-bold shadow-lg hover:opacity-90 transition ml-2">Logout</a>
-    <?php else: ?>
-        <button id="joinNowBtn" class="ilm-bg-gold text-ilm-blue px-4 py-2 rounded-full font-bold shadow-lg hover:opacity-90 transition ml-2">Join Now</button>
-    <?php endif; ?>
   </nav>
+
+  <!-- Right Side: User Info / Join Now (Desktop only) -->
+  <div class="hidden md:flex items-center space-x-4">
+    <?php if(isset($_SESSION['user_id'])): ?>
+      <div class="relative group">
+        <button class="ilm-bg-gold text-ilm-blue px-4 py-2 rounded-full font-bold shadow-lg hover:opacity-90 transition flex items-center">
+          Hi, <?= htmlspecialchars($_SESSION['user_name']) ?>
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <!-- Dropdown -->
+        <div class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all">
+          <a href="my-courses.php" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">My Courses</a>
+          <a href="logout.php" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Logout</a>
+        </div>
+      </div>
+    <?php else: ?>
+      <button id="joinNowBtn" class="ilm-bg-gold text-ilm-blue px-4 py-2 rounded-full font-bold shadow-lg hover:opacity-90 transition">
+        Join Now
+      </button>
+    <?php endif; ?>
+  </div>
 
   <!-- Mobile Menu Button -->
   <button id="menu-toggle" class="text-white focus:outline-none p-2 rounded-md hover:bg-gray-700 md:hidden">
@@ -62,19 +80,21 @@ if(session_status() === PHP_SESSION_NONE){
       <a href="index.php#board" class="text-white text-xl p-2 rounded-lg hover:ilm-bg-gold transition">Board</a>
       <a href="index.php#gallery" class="text-white text-xl p-2 rounded-lg hover:ilm-bg-gold transition">Video & Gallery</a>
       <a href="index.php#e-books" class="text-white text-xl p-2 rounded-lg hover:ilm-bg-gold transition">E-books</a>
-          <?php if(isset($_SESSION['user_id'])): ?>
+      
+      <!-- Only show user info if logged in -->
+      <?php if(isset($_SESSION['user_id'])): ?>
         <span class="ml-4 font-semibold text-gray-300">Welcome - <?= htmlspecialchars($_SESSION['user_name']) ?></span>
         <a href="logout.php" class="ilm-bg-gold text-gray-100 px-4 py-2 rounded-full font-bold shadow-lg hover:opacity-90 transition ml-2">Exit</a>
-    <?php else: ?>
-        <button id="joinNowBtn" class="ilm-bg-gold text-gray-300 px-4 py-2 rounded-full font-bold shadow-lg hover:opacity-90 transition ml-2">Join Now</button>
-    <?php endif; ?>
+      <?php endif; ?>
     </nav>
 
+    <!-- Join Now button for guests -->
     <?php if(!isset($_SESSION['user_id'])): ?>
-        <button id="joinNowBtnMobile" class="ilm-bg-gold text-ilm-blue mt-8 px-6 py-3 rounded-full font-bold shadow-xl hover:opacity-90 transition w-full">Join Now</button>
+      <button id="joinNowBtnMobile" class="ilm-bg-gold text-ilm-blue mt-8 px-6 py-3 rounded-full font-bold shadow-xl hover:opacity-90 transition w-full">Join Now</button>
     <?php endif; ?>
   </div>
 </div>
+
 
 <!-- Auth Modal -->
 <div id="authModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
