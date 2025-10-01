@@ -1,6 +1,8 @@
 <?php
-// config.php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 
 $DB_HOST = 'localhost';
 $DB_NAME = 'ilm_path';

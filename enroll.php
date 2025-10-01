@@ -1,82 +1,74 @@
 <?php
-session_start();
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
+if(session_status() === PHP_SESSION_NONE) session_start();
 
-// Fetch and sanitize POST data
-$course_id      = isset($_POST['course_id']) ? intval($_POST['course_id']) : null;
-$name           = trim($_POST['name'] ?? '');
-$email          = trim($_POST['email'] ?? '');
-$password       = trim($_POST['password'] ?? '');
-$phone          = trim($_POST['phone'] ?? '');
-$location       = trim($_POST['location'] ?? '');
-$payment_method = $_POST['payment_method'] ?? 'Cash';
-$bkash_txn_id   = trim($_POST['transaction_id'] ?? '');
-
-// Validate required fields
-if (!$course_id || !$name || !$phone) {
-    die('Error: Missing required fields.');
+if($_SERVER['REQUEST_METHOD'] !== 'POST'){
+    header("Location: index.php");
+    exit;
 }
 
-// bKash transaction ID is required if payment method is bKash
-if ($payment_method === 'bKash' && empty($bkash_txn_id)) {
-    die('Error: Please provide your bKash transaction ID.');
-}
+$course_id = intval($_POST['course_id']);
+$name = trim($_POST['name']);
+$email = trim($_POST['email'] ?? '');
+$phone = trim($_POST['phone'] ?? '');
+$location = trim($_POST['location'] ?? '');
+$password = $_POST['password'] ?? '';
+$payment_method = $_POST['payment_method'];
+$bkash_txn_id = $_POST['transaction_id'] ?? null;
+
+$pdo->beginTransaction();
 
 try {
-    // Start transaction
-    $pdo->beginTransaction();
+    // If guest and password/email/phone provided, create account
+    if(!isset($_SESSION['user_id'])){
+        // Check if email or phone exists
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email=? OR phone=? LIMIT 1");
+        $stmt->execute([$email, $phone]);
+        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $userId = null;
+        if(!$existing && $password){ // create new user only if password provided
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("INSERT INTO users (name,email,phone,password_hash) VALUES (?,?,?,?)");
+            $stmt->execute([$name,$email,$phone,$password_hash]);
+            $user_id = $pdo->lastInsertId();
 
-    if (!empty($email)) {
-        // Check if user exists
-        $stmt = $pdo->prepare("SELECT id, password_hash FROM users WHERE email = ? LIMIT 1");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($user) {
-            $userId = $user['id'];
-
-            // Auto-login if password matches
-            if (!empty($password) && password_verify($password, $user['password_hash'])) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $name;
-            }
+            // Set session
+            $_SESSION['user_id'] = $user_id;
+            $_SESSION['user_name'] = $name;
+            $_SESSION['user_email'] = $email;
+            $_SESSION['user_phone'] = $phone;
+            $_SESSION['user_location'] = $location;
 
         } else {
-            // Create new user
-            $userPassword = !empty($password) ? $password : bin2hex(random_bytes(4));
-            $passHash = password_hash($userPassword, PASSWORD_DEFAULT);
+            // Existing user, fetch
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email=? OR phone=? LIMIT 1");
+            $stmt->execute([$email,$phone]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password_hash) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$name, $email, $phone, $passHash]);
-            $userId = $pdo->lastInsertId();
-
-            // Auto-login new user
-            $_SESSION['user_id'] = $userId;
-            $_SESSION['user_name'] = $name;
-
-            // TODO: Optionally send credentials via email/SMS
-            // sendEmail($email, $userPassword);
-            // sendSMS($phone, $userPassword);
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_email'] = $user['email'];
+            $_SESSION['user_phone'] = $user['phone'];
+            $_SESSION['user_location'] = $location;
         }
     }
 
-    // Insert enrollment record
-    $stmt = $pdo->prepare("
-        INSERT INTO enrollments 
-        (course_id, name, email, location, phone, payment_method, bkash_txn_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->execute([$course_id, $name, $email, $location, $phone, $payment_method, $bkash_txn_id]);
+    // Use session info for enrollment to ensure correct data
+    $name = $_SESSION['user_name'];
+    $email = $_SESSION['user_email'];
+    $phone = $_SESSION['user_phone'];
+    $location = $_SESSION['user_location'];
+
+    // Insert enrollment
+    $stmt = $pdo->prepare("INSERT INTO enrollments (course_id,name,email,phone,location,payment_method,bkash_txn_id) VALUES (?,?,?,?,?,?,?)");
+    $stmt->execute([$course_id,$name,$email,$phone,$location,$payment_method,$bkash_txn_id]);
 
     $pdo->commit();
 
-    // Redirect with success
-    header('Location: index.php?enrolled=1');
+    header("Location: course.php?id={$course_id}&enrolled=true");
     exit;
 
-} catch (Exception $e) {
+} catch(Exception $e){
     $pdo->rollBack();
-    die('Error: ' . $e->getMessage());
+    die("Error: ".$e->getMessage());
 }
