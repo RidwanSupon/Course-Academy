@@ -1,12 +1,13 @@
 <?php
 require_once __DIR__ . '/config.php';
 
-// Fetch data
+// Fetch data safely
 function fetchData($pdo, $query) {
-    try { return $pdo->query($query)->fetchAll(); } 
+    try { return $pdo->query($query)->fetchAll(PDO::FETCH_ASSOC); } 
     catch(PDOException $e) { return []; }
 }
 
+// Fetching all necessary data
 $banners = fetchData($pdo, "SELECT * FROM banners WHERE active=1 ORDER BY sort_order DESC, id DESC");
 $courses = fetchData($pdo, "SELECT * FROM courses WHERE active=1 ORDER BY created_at DESC");
 $gallery = fetchData($pdo, "SELECT * FROM gallery ORDER BY created_at DESC");
@@ -32,7 +33,7 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
 
 <?php include 'includes/header.php'; ?>
 
-<main class="pt-20">
+<main class="relative">
 
 <!-- Banner Slider -->
 <section class="relative w-full overflow-hidden">
@@ -55,21 +56,21 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
 
 <!-- Why Choose Us -->
 <section id="home" class="bg-pattern py-16 px-6 text-center">
-    <h1 class="text-4xl font-extrabold ilm-text-gold mb-8">Why Choose Us?</h1>
-    <div class="grid grid-cols-3 gap-3 max-w-sm mx-auto mb-10">
-        <div class="col-span-2 row-span-2 h-48 bg-gray-300 rounded-lg shadow-xl overflow-hidden">
-            <img src="assets/images/why_choose_1.jpg" alt="Teacher on laptop" class="w-full h-full object-cover">
-        </div>
-        <div class="col-span-1 h-24 bg-gray-300 rounded-lg shadow-xl overflow-hidden">
-            <img src="assets/images/why_choose_2.jpg" alt="Children learning online" class="w-full h-full object-cover">
-        </div>
-        <div class="col-span-1 h-24 bg-gray-300 rounded-lg shadow-xl overflow-hidden">
-            <img src="assets/images/why_choose_3.jpg" alt="Children on cushions" class="w-full h-full object-cover">
-        </div>
+  <h1 class="text-4xl font-extrabold ilm-text-gold mb-8">Why Choose Us?</h1>
+  <div class="grid grid-cols-3 gap-3 max-w-sm mx-auto mb-10">
+    <div class="col-span-2 row-span-2 h-48 rounded-lg overflow-hidden shadow-xl">
+      <img src="assets/images/why_choose_1.jpg" alt="Teacher on laptop" class="w-full h-full object-cover">
     </div>
-    <p class="text-gray-700 leading-relaxed text-left max-w-3xl mx-auto">
-        ILM Path Network — Your Path to Quranic Mastery. Live, interactive classes guided by expert teachers for all ages. Courses include Quran memorization, Arabic language, and more.
-    </p>
+    <div class="h-24 rounded-lg overflow-hidden shadow-xl">
+      <img src="assets/images/why_choose_2.jpg" alt="Children learning online" class="w-full h-full object-cover">
+    </div>
+    <div class="h-24 rounded-lg overflow-hidden shadow-xl">
+      <img src="assets/images/why_choose_3.jpg" alt="Children on cushions" class="w-full h-full object-cover">
+    </div>
+  </div>
+  <p class="text-gray-700 leading-relaxed max-w-3xl mx-auto text-left">
+    ILM Path Network — Your Path to Quranic Mastery. Live, interactive classes guided by expert teachers for all ages. Courses include Quran memorization, Arabic language, and more.
+  </p>
 </section>
 
 <!-- Courses Section -->
@@ -77,14 +78,11 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
   <h2 class="text-4xl ilm-text-gold font-extrabold mb-8">Our Courses</h2>
   <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
     <?php foreach($courses as $course): ?>
-      <div class="course-card p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300 cursor-pointer"
-           data-id="<?= $course['id'] ?>"
-           data-title="<?= htmlspecialchars($course['title'], ENT_QUOTES) ?>"
-           data-desc="<?= htmlspecialchars($course['short_desc'], ENT_QUOTES) ?>">
+      <a href="course.php?id=<?= $course['id'] ?>" class="course-card p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300 block">
         <div class="text-5xl mb-3 ilm-text-gold">📖</div>
         <h3 class="text-2xl font-bold ilm-text-gold mb-3"><?= htmlspecialchars($course['title']) ?></h3>
         <p class="text-gray-600"><?= htmlspecialchars($course['short_desc']) ?></p>
-      </div>
+      </a>
     <?php endforeach; ?>
   </div>
 </section>
@@ -96,12 +94,11 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
     <?php foreach(array_slice($videos,0,4) as $video):
       preg_match("/(?:youtube\.com\/.*v=|youtu\.be\/)([^&\n]+)/",$video['url'],$matches);
       $youtube_id = $matches[1] ?? null;
+      if(!$youtube_id) continue;
     ?>
-      <?php if($youtube_id): ?>
-        <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-2xl bg-gray-900">
-          <iframe class="w-full h-full" src="https://www.youtube.com/embed/<?= htmlspecialchars($youtube_id) ?>" title="<?= htmlspecialchars($video['title']) ?>" frameborder="0" allowfullscreen></iframe>
-        </div>
-      <?php endif; ?>
+      <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-2xl bg-gray-900">
+        <iframe class="w-full h-full" src="https://www.youtube.com/embed/<?= htmlspecialchars($youtube_id) ?>" title="<?= htmlspecialchars($video['title']) ?>" frameborder="0" allowfullscreen></iframe>
+      </div>
     <?php endforeach; ?>
   </div>
   <a href="videos.php" class="inline-block ilm-bg-gold text-ilm-blue py-2 px-6 rounded-lg font-bold hover:opacity-90 transition mb-10">See All Videos</a>
@@ -109,7 +106,7 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
   <h2 class="text-4xl font-extrabold ilm-text-gold mb-4">Photo Gallery</h2>
   <div class="grid grid-cols-2 gap-4 max-w-3xl mx-auto mb-6">
     <?php foreach(array_slice($gallery,0,6) as $g): ?>
-      <div class="h-48 bg-gray-700 rounded-lg shadow-xl overflow-hidden">
+      <div class="h-48 rounded-lg shadow-xl overflow-hidden">
         <img src="assets/uploads/gallery/<?= htmlspecialchars($g['image']) ?>" alt="<?= htmlspecialchars($g['caption']) ?>" class="w-full h-full object-cover cursor-pointer">
       </div>
     <?php endforeach; ?>
@@ -123,7 +120,7 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
   <?php foreach($reviews as $rev): ?>
     <div class="max-w-xl mx-auto bg-gray-100 p-8 rounded-lg shadow-xl border-l-4 border-ilm-text-gold mb-6">
       <div class="flex items-start mb-4">
-        <img src="<?= $rev['image']? 'assets/uploads/gallery/'.htmlspecialchars($rev['image']): 'assets/images/student-placeholder.jpg' ?>" alt="Student" class="w-16 h-16 rounded-full mr-4 object-cover border-2 border-ilm-blue">
+        <img src="<?= $rev['image'] ? 'assets/uploads/gallery/'.htmlspecialchars($rev['image']) : 'assets/images/student-placeholder.jpg' ?>" alt="Student" class="w-16 h-16 rounded-full mr-4 object-cover border-2 border-ilm-blue">
         <div class="text-left">
           <p class="font-semibold text-xl"><?= htmlspecialchars($rev['name']) ?></p>
           <p class="text-gray-500 text-sm"><?= htmlspecialchars($rev['country']) ?></p>
@@ -137,69 +134,18 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
 
 </main>
 
-<!-- Enrollment Modal -->
-<div id="enroll-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
-  <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative">
-    <button id="close-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-900">&times;</button>
-    <h2 id="modal-title" class="text-2xl font-bold ilm-text-gold mb-4">Enroll in Course</h2>
-    <p id="modal-desc" class="text-gray-700 mb-4"></p>
-    <form id="enroll-form" action="enroll.php" method="POST" class="space-y-4">
-      <input type="hidden" name="course_id" id="course_id">
-      <input type="text" name="name" placeholder="Full Name" required class="w-full border rounded-lg p-2">
-      <input type="email" name="email" placeholder="Email" class="w-full border rounded-lg p-2">
-      <input type="text" name="phone" placeholder="Phone" required class="w-full border rounded-lg p-2">
-      <input type="text" name="location" placeholder="Location" class="w-full border rounded-lg p-2">
-      <select name="payment_method" required class="w-full border rounded-lg p-2">
-        <option value="Cash">Cash</option>
-        <option value="bKash">bKash</option>
-      </select>
-      <button type="submit" class="ilm-bg-gold text-ilm-blue w-full py-2 rounded-lg font-bold hover:opacity-90 transition">Submit Enrollment</button>
-    </form>
-  </div>
-</div>
-
 <?php include 'includes/footer.php'; ?>
 
 <script>
-// Mobile menu toggle
-const menuToggle = document.getElementById('menu-toggle');
-const mobileMenu = document.getElementById('mobile-menu');
-menuToggle.addEventListener('click', () => mobileMenu.classList.toggle('translate-x-full'));
-document.querySelectorAll('#mobile-menu a').forEach(link => link.addEventListener('click', () => mobileMenu.classList.add('translate-x-full')));
-
-// Banner slider
-let slides = document.querySelectorAll('.banner-slide');
-let index = 0;
-setInterval(() => {
-    slides[index].classList.remove('opacity-100'); slides[index].classList.add('opacity-0');
-    index = (index + 1) % slides.length;
-    slides[index].classList.remove('opacity-0'); slides[index].classList.add('opacity-100');
-}, 5000);
-
-// Enrollment Modal
-const enrollModal = document.getElementById('enroll-modal');
-const closeModalBtn = document.getElementById('close-modal');
-const courseInput = document.getElementById('course_id');
-const modalTitle = document.getElementById('modal-title');
-const modalDesc = document.getElementById('modal-desc');
-
-// Open modal using data attributes
-document.querySelectorAll('.course-card').forEach(card => {
-    card.addEventListener('click', () => {
-        courseInput.value = card.dataset.id;
-        modalTitle.textContent = "Enroll in " + card.dataset.title;
-        modalDesc.textContent = card.dataset.desc || "";
-        enrollModal.classList.remove('hidden');
-        enrollModal.classList.add('flex');
-    });
-});
-
-closeModalBtn.addEventListener('click', () => {
-    enrollModal.classList.add('hidden'); enrollModal.classList.remove('flex');
-});
-
-window.addEventListener('click', (e) => {
-    if(e.target === enrollModal) { enrollModal.classList.add('hidden'); enrollModal.classList.remove('flex'); }
+document.addEventListener('DOMContentLoaded', () => {
+    // Banner slider
+    const slides = document.querySelectorAll('.banner-slide');
+    let index = 0;
+    setInterval(() => {
+        slides[index].classList.remove('opacity-100'); slides[index].classList.add('opacity-0');
+        index = (index + 1) % slides.length;
+        slides[index].classList.remove('opacity-0'); slides[index].classList.add('opacity-100');
+    }, 5000);
 });
 </script>
 </body>
