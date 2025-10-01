@@ -52,8 +52,8 @@ $userLocation = $isLoggedIn ? ($_SESSION['user_location'] ?? '') : '';
   <div class="grid md:grid-cols-2 gap-8 mb-12">
     <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col space-y-4">
       <h2 class="text-2xl ilm-text-gold font-bold mb-4">Course Information</h2>
-      <p><span class="font-semibold">Teacher:</span> <?= htmlspecialchars($course['teacher']) ?></p>
-      <p><span class="font-semibold">Gender:</span> <?= htmlspecialchars($course['gender']) ?></p>
+      <p><span class="font-semibold">Mentor:</span> <?= htmlspecialchars($course['teacher']) ?></p>
+      <p><span class="font-semibold">Course For:</span> <?= htmlspecialchars($course['gender']) ?></p>
       <p><span class="font-semibold">Duration:</span> <?= htmlspecialchars($course['duration']) ?></p>
       <p><span class="font-semibold">Price:</span> <?= $course['price'] > 0 ? '৳ '.number_format($course['price'],2) : 'Free' ?></p>
     </div>
