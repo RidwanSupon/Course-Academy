@@ -21,7 +21,20 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ILM PATH NETWORK - Your Path to Quranic Mastery</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
 <style>
+    :root {
+        /* Primary Dark Color (from your logo - deep navy/charcoal) */
+        --ilm-blue: #1F2937; 
+        /* Secondary Accent Color (Professional Blue/Cyan) */
+        --ilm-accent: #007BFF;
+    }
+    .ilm-bg-blue { background-color: var(--ilm-blue); }
+    .ilm-text-accent { color: var(--ilm-accent); }
+    .ilm-bg-accent { background-color: var(--ilm-accent); }
+    .ilm-text-blue { color: var(--ilm-blue); } 
+
+
 :root { --ilm-blue:#0b1d3d; --ilm-gold:#f2a900; }
 .ilm-bg-blue { background-color: var(--ilm-blue); }
 .ilm-text-gold { color: var(--ilm-gold); }
@@ -36,17 +49,25 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
 <main class="relative">
 
 <!-- Banner Slider -->
+<!-- Banner Slider -->
 <section class="relative w-full overflow-hidden">
   <div class="relative w-full h-[300px] sm:h-[400px] md:h-[500px]">
     <?php foreach($banners as $i => $b): ?>
-      <div class="banner-slide absolute inset-0 transition-opacity duration-700 <?= $i===0 ? 'opacity-100 z-10' : 'opacity-0' ?>">
-        <img src="assets/uploads/banners/<?= htmlspecialchars($b['image']) ?>" alt="<?= htmlspecialchars($b['title'] ?? 'Banner') ?>" class="w-full h-full object-cover">
+      <div class="banner-slide absolute inset-0 transition-all duration-700 ease-in-out <?= $i===0 ? 'opacity-100 z-10' : 'opacity-0 z-0' ?>">
+        <img src="assets/uploads/banners/<?= htmlspecialchars($b['image']) ?>" 
+             alt="<?= htmlspecialchars($b['title'] ?? 'Banner') ?>" 
+             class="w-full h-full object-cover">
+
         <div class="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center px-4">
           <?php if(!empty($b['title'])): ?>
-            <h2 class="text-white text-xl sm:text-2xl md:text-4xl font-bold drop-shadow-lg"><?= htmlspecialchars($b['title']) ?></h2>
+            <h2 class="text-white text-xl sm:text-2xl md:text-4xl font-bold drop-shadow-lg">
+              <?= htmlspecialchars($b['title']) ?>
+            </h2>
           <?php endif; ?>
           <?php if(!empty($b['subtitle'])): ?>
-            <p class="text-white text-sm sm:text-base md:text-lg mt-2 drop-shadow-lg max-w-lg"><?= htmlspecialchars($b['subtitle']) ?></p>
+            <p class="text-white text-sm sm:text-base md:text-lg mt-2 drop-shadow-lg max-w-lg">
+              <?= htmlspecialchars($b['subtitle']) ?>
+            </p>
           <?php endif; ?>
         </div>
       </div>
@@ -54,38 +75,299 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
   </div>
 </section>
 
-<!-- Why Choose Us -->
-<section id="home" class="bg-pattern py-16 px-6 text-center">
-  <h1 class="text-4xl font-extrabold ilm-text-gold mb-8">Why Choose Us?</h1>
-  <div class="grid grid-cols-3 gap-3 max-w-sm mx-auto mb-10">
-    <div class="col-span-2 row-span-2 h-48 rounded-lg overflow-hidden shadow-xl">
-      <img src="assets/images/why_choose_1.jpg" alt="Teacher on laptop" class="w-full h-full object-cover">
+<section id="courses" class="py-20 px-6 bg-gray-50 text-center">
+    <h2 class="text-4xl md:text-5xl font-black text-blue-900 mb-16 relative inline-block border-b-4 border-gray-200 pb-3" data-aos="fade-down">
+        Our Featured Courses
+        <span class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-24 h-1 ilm-bg-gold rounded-full shadow-md"></span>
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 max-w-7xl mx-auto">
+        <?php 
+        $delay = 0; // Initialize delay counter
+        foreach($courses as $course): 
+        ?>
+            <a href="course.php?id=<?= $course['id'] ?>" 
+                class="group relative flex flex-col p-6 sm:p-8 rounded-2xl border border-gray-200 
+                       bg-blue-100 shadow-xl 
+                       
+                       /* --- HOVER ANIMATION CLASSES --- */
+                       transition-all duration-300 ease-in-out 
+                       transform hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-gray-300/80"
+                
+                data-aos="fade-up"
+                data-aos-delay="<?= $delay ?>"
+                data-aos-easing="ease-out-cubic"
+            >
+                
+                <div class="w-16 h-16 flex items-center justify-center mx-auto mb-5 rounded-full 
+                            
+                            /* --- DEFAULT STATE: Clean Gray/White --- */
+                            bg-gray-100 font-bold text-3xl border border-gray-300
+                            
+                            /* --- HOVER STATE: Flip to Dark Blue Background --- */
+                            group-hover:bg-ilm-blue group-hover:border-ilm-blue
+                            transition duration-300">
+                    
+                    <span class="transition duration-300">
+                        <img src="assets/uploads/courseimg.png" alt="" class="w-8 h-8 group-hover:filter group-hover:invert transition duration-300">
+                    </span>
+                </div>
+
+                <h3 class="text-xl font-extrabold ilm-text-blue mb-3 transition duration-300 group-hover:ilm-text-accent">
+                    <?= htmlspecialchars($course['title']) ?>
+                </h3>
+
+                <p class="text-gray-700 text-sm mb-4 flex-grow transition duration-300 group-hover:text-gray-600">
+                    <?= htmlspecialchars($course['short_desc']) ?>
+                </p>
+
+             <div class="mt-4 pt-4 border-t border-gray-200 transition duration-300 group-hover:border-ilm-accent/50 flex justify-center">
+    <span class="text-sm font-black text-blue-900 flex items-center">
+        View Details 
+        <span class="ml-1 group-hover:ml-2 transition-all duration-300">→</span>
+    </span>
+</div>
+                
+            </a>
+        <?php 
+        $delay += 100;
+        endforeach; 
+        ?>
     </div>
-    <div class="h-24 rounded-lg overflow-hidden shadow-xl">
-      <img src="assets/images/why_choose_2.jpg" alt="Children learning online" class="w-full h-full object-cover">
-    </div>
-    <div class="h-24 rounded-lg overflow-hidden shadow-xl">
-      <img src="assets/images/why_choose_3.jpg" alt="Children on cushions" class="w-full h-full object-cover">
-    </div>
-  </div>
-  <p class="text-gray-700 leading-relaxed max-w-3xl mx-auto text-left">
-    ILM Path Network — Your Path to Quranic Mastery. Live, interactive classes guided by expert teachers for all ages. Courses include Quran memorization, Arabic language, and more.
-  </p>
 </section>
 
-<!-- Courses Section -->
-<section id="courses" class="py-16 px-6 text-center bg-white">
-  <h2 class="text-4xl ilm-text-gold font-extrabold mb-8">Our Courses</h2>
-  <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-    <?php foreach($courses as $course): ?>
-      <a href="course.php?id=<?= $course['id'] ?>" class="course-card p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300 block">
-        <div class="text-5xl mb-3 ilm-text-gold">📖</div>
-        <h3 class="text-2xl font-bold ilm-text-gold mb-3"><?= htmlspecialchars($course['title']) ?></h3>
-        <p class="text-gray-600"><?= htmlspecialchars($course['short_desc']) ?></p>
-      </a>
-    <?php endforeach; ?>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+  // Initialize AOS after the page loads
+  AOS.init({
+    duration: 800, // duration of the animation (in milliseconds)
+    once: true,    // elements should only animate once
+  });
+
+
+
+</script>  <!-- why choose us --> 
+</section><section id="why-choose-us" class="bg-gray-50 py-16 px-6">
+<div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+
+  <!-- Desktop View (unchanged) -->
+  <div class="relative min-h-[400px] hidden md:block">
+      <div class="absolute w-64 h-80 bg-white p-2 rounded-lg shadow-xl border border-gray-100 transform rotate-3 z-20"
+           style="top: 50%; left: 20%; transform: translate(-50%, -50%) rotate(3deg);">
+          <img src="assets/uploads/faq-1.png" alt="Teacher on laptop" class="w-full h-full object-cover rounded">
+          <span class="absolute top-2 left-2 w-3 h-3 bg-green-600 rounded-full"></span>
+      </div>
+
+      <div class="absolute w-48 h-48 bg-white p-2 rounded-lg shadow-xl border border-gray-100 transform -rotate-6 z-10"
+           style="top: 10%; left: 65%; transform: translateX(-50%) rotate(-6deg);">
+          <img src="assets/uploads/faq-2.png" alt="Children learning" class="w-full h-full object-cover rounded">
+          <span class="absolute top-2 right-2 w-3 h-3 bg-red-600 rounded-full"></span>
+      </div>
+
+      <div class="absolute w-56 h-40 bg-white p-2 rounded-lg shadow-xl border border-gray-100 transform -rotate-3 z-10"
+           style="bottom: 10%; right: 5%; transform: rotate(-3deg);">
+          <img src="assets/uploads/faq-3.png" alt="Children on cushions" class="w-full h-full object-cover rounded">
+          <span class="absolute bottom-2 right-2 w-3 h-3 bg-red-600 rounded-full"></span>
+      </div>
   </div>
+
+  <!-- Mobile View -->
+  <div class="relative min-h-[400px] flex justify-center items-center md:hidden space-x-4">
+      <!-- First Image -->
+      <div class="w-52 h-64 bg-white p-2 rounded-lg shadow-xl border border-gray-100 animate-float">
+          <img src="assets/uploads/faq-1.png" alt="Teacher on laptop" class="w-full h-full object-cover rounded">
+          <span class="absolute top-2 left-2 w-3 h-3 bg-green-600 rounded-full"></span>
+      </div>
+      <!-- Second Image -->
+      <div class="w-44 h-44 bg-white p-2 rounded-lg shadow-xl border border-gray-100 animate-float-delay">
+          <img src="assets/uploads/faq-2.png" alt="Children learning" class="w-full h-full object-cover rounded">
+          <span class="absolute top-2 right-2 w-3 h-3 bg-red-600 rounded-full"></span>
+      </div>
+      <!-- Third Image -->
+      <div class="w-48 h-36 bg-white p-2 rounded-lg shadow-xl border border-gray-100 animate-float-delay2">
+          <img src="assets/uploads/faq-3.png" alt="Children on cushions" class="w-full h-full object-cover rounded">
+          <span class="absolute bottom-2 right-2 w-3 h-3 bg-red-600 rounded-full"></span>
+      </div>
+  </div>
+
+<!-- Mobile Animation -->
+<style>
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+.animate-float-delay {
+  animation: float 3s ease-in-out 0.5s infinite;
+}
+.animate-float-delay2 {
+  animation: float 3s ease-in-out 1s infinite;
+}
+</style>
+
+        <!-- FAQ Accordion -->
+        <div class="flex flex-col justify-center h-full"> <h2 class="text-4xl font-extrabold text-blue-900 mb-6">Why Choose At-Tatweer International Institute?</h2>
+            
+        <div class="space-y-3" id="faq-accordion">
+                
+                <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+                        Advanced Online Islamic Education
+                        <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+learning that blends authentic Islamic knowledge with modern academic insight. Through our state-of-the-art e-learning platform, students of all ages and backgrounds can join from anywhere in the world and benefit from uninterrupted, specialized education.                    </div>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+A Global Learning Environment
+                        <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+At-Tatweer International Institute brings together students from different cultures and societies. This global classroom broadens perspectives, nurtures critical thinking, and strengthens the ability to engage in meaningful dialogue—skills essential for success in today’s interconnected world.                    </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+Nurturing a Qur’anic Generation                        <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+Guided by expert scholars of Qur’anic sciences, our programs ensure precise memorization, authentic recitation, and mastery of the well-established mutawātir qirāʾāt with an unbroken chain of transmission (sanad). Through our structured Ten-Level syllabus, students gain both Qur’anic fluency and essential Islamic knowledge. <br>Special Programs for Adults
+We provide dedicated Qur’an courses tailored for adults. Designed to be simple, clear, and engaging, these programs help learners build a strong foundation in Qur’an, Sunnah, and essential Islamic principles at any stage of life.
+                    </div>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+Global Reach                        <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+Students from across the globe enroll in our programs, connecting hearts and minds through knowledge rooted in Qur’an and Sunnah. <br>
+Our classes are available in Arabic, English, Bangla, and Urdu, making learning accessible and effective for diMultilingual Education
+verse learners.                    </div>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+                      Flexible & Interactive Learning
+                        <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+We offer lively, student-centered classes that are interactive, flexible, and designed to fit each learner’s schedule.                    </div>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+Free Trial Classes                        <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+Experience our teaching quality firsthand with a free trial class before enrolling.
+                    </div>
+                </div>
+
+    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+            Excellence with Authenticity
+            <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+            We combine the timeless guidance of Qur’an and Sunnah with modern educational methods to ensure learning that is both authentic and impactful.
+        </div>
+    </div>
+
+    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+            Holistic Growth
+            <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+            Education at At-Tatbeer focuses not only on knowledge, but also on building character, discipline, and moral values.
+        </div>
+    </div>
+
+    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+            Recognized & Evolving Curriculum
+            <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+            For secondary and higher-secondary levels, we follow the curriculum of Ma’had al-Buʿūth al-Islāmiyyah (an Azhar-affiliated institute), alongside traditional madrasah syllabi. Our academic board continuously updates and refines study materials to ensure authenticity and relevance. Core subjects include Tafsīr, Hadīth, Fiqh, ʿAqīdah, and Tarbiyah.
+        </div>
+    </div>
+
+    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+            Excellence in Languages (English & Arabic)
+            <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+            Through Nadim’s Academy, we offer a comprehensive English program from Basic to Advanced, alongside classical and modern Arabic studies. We use internationally recognized teaching methodologies designed specifically for non-Arab learners to build linguistic fluency and confidence.
+        </div>
+    </div>
+
+    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+            World-Class Faculty
+            <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+            Our instructors include graduates from Al-Azhar University, Darul Uloom Deoband, and other globally respected institutions. Their expertise ensures students achieve mastery in Islamic sciences and intellectual maturity.
+        </div>
+    </div>
+
+    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+            Academic Oversight & Feedback
+            <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+            A professional panel monitors and evaluates all programs, ensuring quality and consistent progress. We maintain an open channel for students and parents to share feedback freely, allowing us to take necessary steps promptly.
+        </div>
+    </div>
+
+    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <button class="accordion-header flex justify-between items-center w-full p-4 text-left text-lg font-semibold text-gray-800 hover:bg-gray-50 transition duration-150" aria-expanded="false">
+            Our Mission
+            <svg class="accordion-icon w-5 h-5 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content p-4 pt-0 text-gray-600 hidden">
+            At-Tatweer International Institute is more than a school—it is a global platform where knowledge meets transformation. Our mission is to facilitate a global, accessible, and high-quality platform for Quranic and Arabic education, empowering every Muslim to connect deeply with the book of Allah, grow into individuals whose lives are guided by Qur’an and Sunnah.
+        </div>
+    </div>
+
+            </div>
+        </div>
+    </div>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+        accordionHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('.accordion-icon');
+                
+                // Toggle the 'hidden' class on the content
+                content.classList.toggle('hidden');
+                
+                // Toggle the 'aria-expanded' attribute
+                const isExpanded = header.getAttribute('aria-expanded') === 'true' || false;
+                header.setAttribute('aria-expanded', !isExpanded);
+                
+                // Rotate the icon
+                icon.classList.toggle('rotate-180');
+            });
+        });
+    });
+</script>
+
+
 
 <!-- Video & Gallery -->
 <section id="gallery" class="ilm-bg-blue text-white py-16 px-6 text-center">
@@ -115,38 +397,58 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
 </section>
 
 <!-- Student Reviews -->
-<section id="reviews" class="bg-white py-16 px-6 text-center">
-  <h2 class="text-4xl font-extrabold ilm-text-gold mb-10">Student Reviews</h2>
-  <?php foreach($reviews as $rev): ?>
-    <div class="max-w-xl mx-auto bg-gray-100 p-8 rounded-lg shadow-xl border-l-4 border-ilm-text-gold mb-6">
-      <div class="flex items-start mb-4">
-        <img src="<?= $rev['image'] ? 'assets/uploads/gallery/'.htmlspecialchars($rev['image']) : 'assets/images/student-placeholder.jpg' ?>" alt="Student" class="w-16 h-16 rounded-full mr-4 object-cover border-2 border-ilm-blue">
-        <div class="text-left">
-          <p class="font-semibold text-xl"><?= htmlspecialchars($rev['name']) ?></p>
-          <p class="text-gray-500 text-sm"><?= htmlspecialchars($rev['country']) ?></p>
-          <div class="flex text-yellow-500"><?= str_repeat('⭐', intval($rev['rating'])) ?></div>
+<section id="reviews" class="bg-white py-16 px-6">
+  <h2 class="text-4xl font-extrabold ilm-text-gold mb-10 text-center">Student Reviews</h2>
+
+  <!-- Scrollable container -->
+  <div class="flex overflow-x-auto space-x-6 scrollbar-hide snap-x snap-mandatory pb-4">
+    <?php foreach($reviews as $rev): ?>
+      <div class="flex-none w-80 bg-gray-100 p-6 rounded-lg shadow-xl border-l-4 border-ilm-text-gold snap-start">
+        <div class="flex items-start mb-4">
+          <img 
+            src="<?= $rev['image'] ? 'assets/uploads/reviews/'.htmlspecialchars($rev['image']) : 'assets/images/student-placeholder.jpg' ?>" 
+            alt="Student" 
+            class="w-16 h-16 rounded-full mr-4 object-cover border-2 border-ilm-blue"
+          >
+          <div class="text-left">
+            <p class="font-semibold text-lg"><?= htmlspecialchars($rev['name']) ?></p>
+            <p class="text-gray-500 text-sm"><?= htmlspecialchars($rev['country']) ?></p>
+            <div class="flex text-yellow-500"><?= str_repeat('⭐', intval($rev['rating'])) ?></div>
+          </div>
         </div>
+        <p class="text-gray-700 italic text-sm">"<?= htmlspecialchars($rev['message']) ?>"</p>
       </div>
-      <p class="text-gray-700 italic">"<?= htmlspecialchars($rev['message']) ?>"</p>
-    </div>
-  <?php endforeach; ?>
+    <?php endforeach; ?>
+  </div>
 </section>
 
 </main>
-
 <?php include 'includes/footer.php'; ?>
+
+
+<!-- Banner Slider Script -->
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Banner slider
     const slides = document.querySelectorAll('.banner-slide');
     let index = 0;
-    setInterval(() => {
-        slides[index].classList.remove('opacity-100'); slides[index].classList.add('opacity-0');
-        index = (index + 1) % slides.length;
-        slides[index].classList.remove('opacity-0'); slides[index].classList.add('opacity-100');
-    }, 5000);
+
+    if(slides.length > 1){
+        setInterval(() => {
+            // Hide current slide
+            slides[index].classList.remove('opacity-100', 'z-10');
+            slides[index].classList.add('opacity-0', 'z-0');
+
+            // Move to next
+            index = (index + 1) % slides.length;
+
+            // Show next slide
+            slides[index].classList.remove('opacity-0', 'z-0');
+            slides[index].classList.add('opacity-100', 'z-10');
+        }, 5000);
+    }
 });
 </script>
+
 </body>
 </html>

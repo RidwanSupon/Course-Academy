@@ -23,10 +23,19 @@ if(session_status() === PHP_SESSION_NONE){
 <header class="ilm-bg-blue p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-lg">
   
   <!-- Left Side: Logo -->
-  <div class="flex items-center space-x-3">
-    <img src="assets/images/logo.png" alt="Logo" class="h-10">
-    <span class="text-white text-lg font-bold">ILM PATH NETWORK</span>
+<div class="flex items-center space-x-3">
+  <img src="assets/images/logo.png" alt="Logo" class="h-10">
+  <div class="flex flex-col">
+    <!-- Main title -->
+    <span class="text-white text-lg font-bold tracking-tight leading-tight" id="main-title">At-Tatweer</span>
+    <!-- Sub-title with same width as main title -->
+    <span class="text-white text-sm font-semibold mt-1 w-[max-content]" style="width: fit-content;" id="sub-title">
+      International Institute
+    </span>
   </div>
+</div>
+
+
 
   <!-- Middle: Navigation Links (exact center) -->
   <nav class="hidden md:flex space-x-6 text-white font-medium opacity-90 absolute left-1/2 transform -translate-x-1/2">

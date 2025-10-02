@@ -1,6 +1,11 @@
 <?php
 // includes/functions.php
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../config.php'; // Ensure $pdo is defined
+
+
+/* ============================
+   Admin Authentication
+============================ */
 
 /**
  * Check if admin is logged in
@@ -21,6 +26,10 @@ function require_admin(): void {
     }
 }
 
+/* ============================
+   File Upload / Delete
+============================ */
+
 /**
  * Save an uploaded image to a destination folder
  * @param string $fileInput Name of the input field
@@ -30,35 +39,53 @@ function require_admin(): void {
  * @return array ['path' => filename] on success, ['error' => message] on failure
  */
 function save_uploaded_image(string $fileInput, string $destFolder, int $maxSize = 5242880, array $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']): array {
-    if (!isset($_FILES[$fileInput]) || $_FILES[$fileInput]['error'] !== UPLOAD_ERR_OK) {
-        return ['error' => 'No file uploaded or upload error.'];
+    if (!isset($_FILES[$fileInput])) {
+        return ['error' => 'No file uploaded.'];
     }
 
-    $file = $_FILES[$fileInput];
+    // Handle multiple files
+    if (is_array($_FILES[$fileInput]['name'])) {
+        $files = [];
+        foreach ($_FILES[$fileInput]['name'] as $i => $name) {
+            $tmp = $_FILES[$fileInput]['tmp_name'][$i];
+            $size = $_FILES[$fileInput]['size'][$i];
+            $error = $_FILES[$fileInput]['error'][$i];
 
-    // Check file size
+            $file = ['name'=>$name, 'tmp_name'=>$tmp, 'size'=>$size, 'error'=>$error];
+            $result = single_file_upload($file, $destFolder, $maxSize, $allowedTypes);
+            if (isset($result['error'])) return ['error'=>$result['error']];
+            $files[] = $result['path'];
+        }
+        return ['path' => $files];
+    } else {
+        return single_file_upload($_FILES[$fileInput], $destFolder, $maxSize, $allowedTypes);
+    }
+}
+
+/**
+ * Helper function for single file upload
+ */
+function single_file_upload(array $file, string $destFolder, int $maxSize, array $allowedTypes): array {
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return ['error' => 'File upload error.'];
+    }
+
     if ($file['size'] > $maxSize) {
-        return ['error' => 'File size exceeds the allowed limit.'];
+        return ['error' => 'File exceeds max size.'];
     }
 
-    // Check MIME type
     $mimeType = mime_content_type($file['tmp_name']);
     if (!in_array($mimeType, $allowedTypes)) {
         return ['error' => 'Unsupported file type.'];
     }
 
-    // Ensure destination folder exists
-    if (!is_dir($destFolder)) {
-        mkdir($destFolder, 0777, true);
-    }
+    if (!is_dir($destFolder)) mkdir($destFolder, 0755, true);
 
-    // Generate unique file name
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $uniqueName = uniqid('', true) . '.' . $extension;
-    $destinationPath = rtrim($destFolder, '/') . '/' . $uniqueName;
+    $uniqueName = uniqid('', true) . '.' . strtolower($extension);
+    $destination = rtrim($destFolder, '/') . '/' . $uniqueName;
 
-    // Move the uploaded file
-    if (!move_uploaded_file($file['tmp_name'], $destinationPath)) {
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
         return ['error' => 'Failed to move uploaded file.'];
     }
 
@@ -72,33 +99,39 @@ function save_uploaded_image(string $fileInput, string $destFolder, int $maxSize
  */
 function delete_image(string $folder, string $filename): void {
     $filePath = rtrim($folder, '/') . '/' . $filename;
-    if (file_exists($filePath)) {
-        unlink($filePath);
-    }
+    if (file_exists($filePath)) unlink($filePath);
 }
 
+/* ============================
+   Data Sanitization
+============================ */
+
 /**
- * Sanitize a string input before DB insert
+ * Sanitize a string input for safe output
+ * Use prepared statements for DB insertion (no need for escaping here)
  * @param string $data
  * @return string
  */
 function sanitize(string $data): string {
-    global $conn;
-    return mysqli_real_escape_string($conn, trim($data));
+    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
 }
 
+/* ============================
+   Flash Messages
+============================ */
+
 /**
- * Set flash message
+ * Set a flash message
  * @param string $message
  * @param string $type success|error|info
  */
 function set_flash(string $message, string $type = 'success'): void {
-    $_SESSION['flash'] = ['message' => $message, 'type' => $type];
+    $_SESSION['flash'] = ['message'=>$message, 'type'=>$type];
 }
 
 /**
  * Get flash message and clear
- * @return array|null ['message' => ..., 'type' => ...]
+ * @return array|null ['message'=>..., 'type'=>...]
  */
 function get_flash(): ?array {
     if (isset($_SESSION['flash'])) {
