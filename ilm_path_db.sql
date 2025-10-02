@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS ilm_path CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE ilm_path;
+
 
 -- admin users
 CREATE TABLE admins (
@@ -40,35 +39,8 @@ CREATE TABLE gallery (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- courses
-CREATE TABLE courses (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  short_desc TEXT,
-  long_desc TEXT,
-  teacher VARCHAR(150),
-  gender ENUM('Male','Female','Both') DEFAULT 'Both',
-  price DECIMAL(10,2) DEFAULT 0,
-  duration VARCHAR(100),
-  active TINYINT(1) DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
--- enrollments
-CREATE TABLE enrollments (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  course_id INT NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(150),
-  location VARCHAR(255),
-  phone VARCHAR(50),
-  payment_method ENUM('Cash','bKash') NOT NULL,
-  bkash_txn_id VARCHAR(255) DEFAULT NULL,
-  extra TEXT,
-  status ENUM('Pending','Approved','Cancelled') DEFAULT 'Pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
+
 
 -- reviews
 CREATE TABLE reviews (

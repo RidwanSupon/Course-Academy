@@ -75,20 +75,91 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
   </div>
 </section>
 
+<!--about us-->
+
+<section id="about-us" class="bg-gray-50 py-16 px-4 sm:px-6 lg:px-8 text-blue-900">
+    <div class="max-w-7xl mx-auto">
+        <h2 class="text-4xl font-extrabold text-gray-900 mb-12 text-center">About At-Tatweer Institute</h2>
+
+        <div class="flex flex-col lg:flex-row lg:space-x-12 space-y-12 lg:space-y-0">
+
+            <!-- Left Column -->
+            <div 
+                class="lg:w-1/2 flex flex-col justify-center opacity-0 lg:animate-slide-in-left"
+                data-aos="fade-right" 
+                data-aos-duration="1000" 
+                data-aos-once="true"
+            >
+                <h3 class="text-2xl font-bold ilm-text-gold mb-4">Our Mission</h3>
+                <p class="text-gray-900 mb-6">
+                    At-Tatweer Institute is a trusted and pioneering online platform dedicated to academic Islamic education with a modern vision. Our mission is to empower students with authentic Islamic knowledge while equipping them with the intellectual and professional skills necessary to excel in today’s world.
+                </p>
+                <p class="text-gray-900">
+                    Under the direct supervision of distinguished scholars from Al-Azhar University, we provide a well-structured learning environment where traditional Islamic sciences are taught alongside contemporary subjects. This unique approach ensures that students develop a strong foundation in faith, character, and knowledge — including recitation and memorization of the Holy Qur’an, Aqeedah, Hadith, Tafsir, Fiqh, Arabic literature, and spoken English — while also preparing them to meet the challenges of modern society.
+                </p>
+            </div>
+
+            <!-- Right Column -->
+            <div 
+                class="lg:w-1/2 flex flex-col justify-center opacity-0 lg:animate-slide-in-right"
+                data-aos="fade-left" 
+                data-aos-duration="1000" 
+                data-aos-once="true"
+            >
+                <h3 class="text-2xl font-bold  ilm-text-gold mb-4">Our Commitment</h3>
+                <ul class="list-disc pl-5 text-gray-900 mb-6 space-y-2">
+                    <li>Authentic Islamic scholarship guided by world-renowned scholars</li>
+                    <li>Modern academic and professional courses tailored to today’s needs</li>
+                    <li>Well-structured online classes and resources accessible from anywhere in the world</li>
+                    <li>A student-centered approach with personalized guidance and mentorship</li>
+                    <li>A safe, reliable, and inspiring environment for learners of all ages</li>
+                </ul>
+
+                <h3 class="text-2xl font-bold ilm-text-gold mb-4">What Makes Us Different</h3>
+                <ul class="list-disc pl-5 text-gray-900 space-y-2">
+                    <li>A recognized and reliable source of authentic Islamic education</li>
+                    <li>A unique balance between Islamic tradition and modern learning</li>
+                    <li>Direct access to qualified, reputable, and internationally respected instructors</li>
+                    <li>Opportunities for both children and adults to learn with excellence from the comfort of their homes</li>
+                </ul>
+            </div>
+        </div>
+
+        <p class="mt-12 text-center text-gray-700 text-lg opacity-0 lg:animate-slide-in-left" data-aos="fade-up" data-aos-duration="1000" data-aos-once="true">
+            At-Tatweer Institute is more than just an educational platform — it is a gateway to building a future rooted in knowledge, values, and excellence. <br>
+            <strong>Join us today and take the first step toward a transformative learning experience that nurtures both faith and intellect.</strong>
+        </p>
+    </div>
+</section>
+
+<script>
+    // Initialize AOS
+    AOS.init({
+        once: true, // animation happens only once when scrolling
+        disable: function() {
+            // Disable AOS for desktop (min-width: 1024px)
+            return window.innerWidth >= 1024;
+        }
+    });
+</script>
+
+
+
+<!--courses-->
 <section id="courses" class="py-20 px-6 bg-gray-50 text-center">
     <h2 class="text-4xl md:text-5xl font-black text-blue-900 mb-16 relative inline-block border-b-4 border-gray-200 pb-3" data-aos="fade-down">
         Our Featured Courses
         <span class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-24 h-1 ilm-bg-gold rounded-full shadow-md"></span>
     </h2>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10 max-w-7xl mx-auto">
         <?php 
         $delay = 0; // Initialize delay counter
         foreach($courses as $course): 
         ?>
             <a href="course.php?id=<?= $course['id'] ?>" 
                 class="group relative flex flex-col p-6 sm:p-8 rounded-2xl border border-gray-200 
-                       bg-blue-100 shadow-xl 
+                       bg-blue-900 shadow-xl 
                        
                        /* --- HOVER ANIMATION CLASSES --- */
                        transition-all duration-300 ease-in-out 
@@ -113,11 +184,11 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
                     </span>
                 </div>
 
-                <h3 class="text-xl font-extrabold ilm-text-blue mb-3 transition duration-300 group-hover:ilm-text-accent">
+                <h3 class="text-xl font-extrabold text-white mb-3 transition duration-300 group-hover:ilm-text-accent">
                     <?= htmlspecialchars($course['title']) ?>
                 </h3>
 
-                <p class="text-gray-700 text-sm mb-4 flex-grow transition duration-300 group-hover:text-gray-600">
+                <p class="text-gray-500 text-sm mb-4 flex-grow transition duration-300 group-hover:text-gray-600">
                     <?= htmlspecialchars($course['short_desc']) ?>
                 </p>
 
@@ -372,7 +443,7 @@ Experience our teaching quality firsthand with a free trial class before enrolli
 <!-- Video & Gallery -->
 <section id="gallery" class="ilm-bg-blue text-white py-16 px-6 text-center">
   <h2 class="text-4xl font-extrabold ilm-text-gold mb-4">Video Gallery</h2>
-  <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 mb-6">
+  <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
     <?php foreach(array_slice($videos,0,4) as $video):
       preg_match("/(?:youtube\.com\/.*v=|youtu\.be\/)([^&\n]+)/",$video['url'],$matches);
       $youtube_id = $matches[1] ?? null;
@@ -386,7 +457,26 @@ Experience our teaching quality firsthand with a free trial class before enrolli
   <a href="videos.php" class="inline-block ilm-bg-gold text-ilm-blue py-2 px-6 rounded-lg font-bold hover:opacity-90 transition mb-10">See All Videos</a>
 
   <h2 class="text-4xl font-extrabold ilm-text-gold mb-4">Photo Gallery</h2>
-  <div class="grid grid-cols-2 gap-4 max-w-3xl mx-auto mb-6">
+
+  <!-- Slider After Photo Gallery Heading -->
+  <div class="relative max-w-4xl mx-auto mb-6">
+    <div id="photo-slider" class="overflow-hidden rounded-lg shadow-xl">
+      <div class="flex transition-transform duration-500" id="slider-track">
+        <?php foreach(array_slice($gallery,0,6) as $g): ?>
+          <div class="min-w-full h-64">
+            <img src="assets/uploads/gallery/<?= htmlspecialchars($g['image']) ?>" 
+                 alt="<?= htmlspecialchars($g['caption']) ?>" 
+                 class="w-full h-full object-cover cursor-pointer">
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <button onclick="prevSlide()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">❮</button>
+    <button onclick="nextSlide()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">❯</button>
+  </div>
+
+  <!-- Photo Grid -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-6">
     <?php foreach(array_slice($gallery,0,6) as $g): ?>
       <div class="h-48 rounded-lg shadow-xl overflow-hidden">
         <img src="assets/uploads/gallery/<?= htmlspecialchars($g['image']) ?>" alt="<?= htmlspecialchars($g['caption']) ?>" class="w-full h-full object-cover cursor-pointer">
@@ -396,31 +486,95 @@ Experience our teaching quality firsthand with a free trial class before enrolli
   <a href="gallery.php" class="inline-block ilm-bg-gold text-ilm-blue py-2 px-6 rounded-lg font-bold hover:opacity-90 transition">See All Photos</a>
 </section>
 
-<!-- Student Reviews -->
-<section id="reviews" class="bg-white py-16 px-6">
-  <h2 class="text-4xl font-extrabold ilm-text-gold mb-10 text-center">Student Reviews</h2>
+<script>
+let currentSlide = 0;
+const sliderTrack = document.getElementById('slider-track');
+const slides = sliderTrack.children;
+const totalSlides = slides.length;
 
-  <!-- Scrollable container -->
-  <div class="flex overflow-x-auto space-x-6 scrollbar-hide snap-x snap-mandatory pb-4">
-    <?php foreach($reviews as $rev): ?>
-      <div class="flex-none w-80 bg-gray-100 p-6 rounded-lg shadow-xl border-l-4 border-ilm-text-gold snap-start">
-        <div class="flex items-start mb-4">
-          <img 
-            src="<?= $rev['image'] ? 'assets/uploads/reviews/'.htmlspecialchars($rev['image']) : 'assets/images/student-placeholder.jpg' ?>" 
-            alt="Student" 
-            class="w-16 h-16 rounded-full mr-4 object-cover border-2 border-ilm-blue"
-          >
-          <div class="text-left">
-            <p class="font-semibold text-lg"><?= htmlspecialchars($rev['name']) ?></p>
-            <p class="text-gray-500 text-sm"><?= htmlspecialchars($rev['country']) ?></p>
-            <div class="flex text-yellow-500"><?= str_repeat('⭐', intval($rev['rating'])) ?></div>
-          </div>
+function showSlide(index) {
+    if(index < 0) index = totalSlides - 1;
+    if(index >= totalSlides) index = 0;
+    currentSlide = index;
+    sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+}
+
+function nextSlide() { showSlide(currentSlide + 1); }
+function prevSlide() { showSlide(currentSlide - 1); }
+
+// Auto-slide every 5 seconds
+setInterval(() => { nextSlide(); }, 5000);
+</script>
+
+<section id="reviews" class="bg-white py-16 px-6 mx-auto">
+    <h2 class="text-4xl font-extrabold ilm-text-gold mb-10 text-center">Student Reviews</h2>
+
+    <div class="relative max-w-6xl mx-auto overflow-hidden">
+        <div id="review-slider" class="flex transition-transform duration-500 ease-in-out">
+            <?php foreach($reviews as $rev): ?>
+                <div class="review-item flex-none w-full md:w-1/2 px-3">
+                    <div class="bg-gray-100 p-6 rounded-lg shadow-xl border-l-4 border-ilm-text-gold">
+                        <div class="flex items-start mb-4">
+                            <img 
+                                src="<?= $rev['image'] ? 'assets/uploads/reviews/'.htmlspecialchars($rev['image']) : 'assets/images/student-placeholder.jpg' ?>" 
+                                alt="Student" 
+                                class="w-16 h-16 rounded-full mr-4 object-cover border-2 border-ilm-blue"
+                            >
+                            <div class="text-left">
+                                <p class="font-semibold text-lg"><?= htmlspecialchars($rev['name']) ?></p>
+                                <p class="text-gray-500 text-sm"><?= htmlspecialchars($rev['country']) ?></p>
+                                <div class="flex text-yellow-500"><?= str_repeat('⭐', intval($rev['rating'])) ?></div>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 italic text-sm">"<?= htmlspecialchars($rev['message']) ?>"</p>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </div>
-        <p class="text-gray-700 italic text-sm">"<?= htmlspecialchars($rev['message']) ?>"</p>
-      </div>
-    <?php endforeach; ?>
-  </div>
+
+        <!-- Navigation Buttons -->
+        <button onclick="prevReview()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">❮</button>
+        <button onclick="nextReview()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">❯</button>
+    </div>
 </section>
+
+<script>
+const slider = document.getElementById('review-slider');
+const items = document.querySelectorAll('.review-item');
+let index = 0;
+
+// Determine how many items per slide based on screen width
+function itemsPerSlide() {
+    return window.innerWidth >= 768 ? 2 : 1; // 2 on desktop, 1 on mobile
+}
+
+function updateSlider() {
+    const perSlide = itemsPerSlide();
+    const offset = index * (100 / perSlide);
+    slider.style.transform = `translateX(-${offset}%)`;
+}
+
+function nextReview() {
+    const perSlide = itemsPerSlide();
+    index = (index + 1) % Math.ceil(items.length / perSlide);
+    updateSlider();
+}
+
+function prevReview() {
+    const perSlide = itemsPerSlide();
+    index = (index - 1 + Math.ceil(items.length / perSlide)) % Math.ceil(items.length / perSlide);
+    updateSlider();
+}
+
+// Auto slide every 5 seconds
+setInterval(nextReview, 5000);
+
+// Update slider on resize
+window.addEventListener('resize', updateSlider);
+
+// Initial update
+updateSlider();
+</script>
 
 </main>
 <?php include 'includes/footer.php'; ?>

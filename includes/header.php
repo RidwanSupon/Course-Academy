@@ -41,7 +41,7 @@ if(session_status() === PHP_SESSION_NONE){
   <nav class="hidden md:flex space-x-6 text-white font-medium opacity-90 absolute left-1/2 transform -translate-x-1/2">
     <a href="index.php#home" class="hover:ilm-text-gold transition">Home</a>
     <a href="index.php#courses" class="hover:ilm-text-gold transition">Courses</a>
-    <a href="index.php#mentors" class="hover:ilm-text-gold transition">Mentors</a>
+    <a href="mentors.php" class="hover:ilm-text-gold transition">Mentors</a>
     <a href="index.php#board" class="hover:ilm-text-gold transition">Board</a>
     <a href="index.php#gallery" class="hover:ilm-text-gold transition">Video & Gallery</a>
     <a href="index.php#e-books" class="hover:ilm-text-gold transition">E-books</a>
