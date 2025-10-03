@@ -25,23 +25,22 @@
             </div>
         </div>
 
-        <div class="flex flex-col items-center justify-center space-y-4 py-8 md:hidden"
+        <div class="md:hidden flex flex-wrap justify-center items-center gap-4 py-8"
              data-aos="fade-up"
-             data-aos-duration="800"
+             data-aos-duration="1000"
              data-aos-once="true">
-            
-            <div class="flex space-x-4">
-                <div class="w-32 h-40 bg-white p-1 rounded-lg shadow-xl border border-gray-100 transform hover:scale-105 transition duration-300">
-                    <img src="assets/uploads/faq-1.png" alt="Teacher on laptop" class="w-full h-full object-cover rounded">
-                    <span class="absolute top-2 left-2 w-3 h-3 bg-green-600 rounded-full"></span>
-                </div>
-                <div class="w-24 h-24 bg-white p-1 rounded-lg shadow-xl border border-gray-100 mt-8 transform hover:scale-105 transition duration-300">
-                    <img src="assets/uploads/faq-2.png" alt="Children learning" class="w-full h-full object-cover rounded">
-                    <span class="absolute top-2 right-2 w-3 h-3 bg-red-600 rounded-full"></span>
-                </div>
+             
+            <div class="w-32 h-40 bg-white p-2 rounded-lg shadow-xl border border-gray-100 animate-float">
+                <img src="assets/uploads/faq-1.png" alt="Teacher on laptop" class="w-full h-full object-cover rounded">
+                <span class="absolute top-2 left-2 w-3 h-3 bg-green-600 rounded-full"></span>
             </div>
-
-            <div class="w-44 h-32 bg-white p-1 rounded-lg shadow-xl border border-gray-100 transform hover:scale-105 transition duration-300">
+            
+            <div class="w-28 h-28 bg-white p-2 rounded-lg shadow-xl border border-gray-100 animate-float-delay mt-8">
+                <img src="assets/uploads/faq-2.png" alt="Children learning" class="w-full h-full object-cover rounded">
+                <span class="absolute top-2 right-2 w-3 h-3 bg-red-600 rounded-full"></span>
+            </div>
+            
+            <div class="w-36 h-28 bg-white p-2 rounded-lg shadow-xl border border-gray-100 animate-float-delay2 mb-8">
                 <img src="assets/uploads/faq-3.png" alt="Children on cushions" class="w-full h-full object-cover rounded">
                 <span class="absolute bottom-2 right-2 w-3 h-3 bg-red-600 rounded-full"></span>
             </div>
@@ -207,9 +206,20 @@
 </section>
 
 <style>
-    /* The original floating animation CSS is now unused because the mobile HTML structure was simplified. 
-    The new mobile image section relies on Tailwind's flexbox utilities for a cleaner look.
-    */
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+
+    .animate-float {
+        animation: float 3s ease-in-out infinite;
+    }
+    .animate-float-delay {
+        animation: float 3s ease-in-out 0.5s infinite;
+    }
+    .animate-float-delay2 {
+        animation: float 3s ease-in-out 1s infinite;
+    }
 </style>
 
 <script>
@@ -226,7 +236,6 @@
                 accordionHeaders.forEach(otherHeader => {
                     if (otherHeader !== header && otherHeader.getAttribute('aria-expanded') === 'true') {
                         otherHeader.setAttribute('aria-expanded', 'false');
-                        // Use a class to smoothly collapse content if desired, but for simplicity, we use 'hidden'
                         otherHeader.nextElementSibling.classList.add('hidden');
                         otherHeader.querySelector('.accordion-icon').classList.remove('rotate-180');
                     }
@@ -243,11 +252,11 @@
         });
 
         // --- AOS Initialization ---
-        // Checks if AOS is defined before initializing (it should be loaded in index.php head)
+        // Checks if AOS is defined before initializing
         if (typeof AOS !== 'undefined') {
             AOS.init({
-                once: true,    // Animation happens only once when scrolling
-                offset: 150,   // Trigger animation a little earlier
+                once: true, 	// Animation happens only once when scrolling
+                offset: 150, 	// Trigger animation a little earlier
             });
         }
     });
