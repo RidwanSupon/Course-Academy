@@ -6,39 +6,48 @@ require_once __DIR__ . '/../includes/functions.php';
 
 require_admin(); // ensure admin is logged in
 
-// Handle approve / cancel / delete actions
-if (isset($_GET['action'], $_GET['id'])) {
-    $id = intval($_GET['id']);
-    $action = strtolower($_GET['action']);
+global $pdo;
 
-    if ($action === 'approve') {
-        $stmt = $pdo->prepare("UPDATE enrollments SET status = 'approved' WHERE id = ?");
-        $stmt->execute([$id]);
-        set_flash("Enrollment request has been approved.");
-    }
-    elseif ($action === 'cancel') {
-        $stmt = $pdo->prepare("UPDATE enrollments SET status = 'canceled' WHERE id = ?");
-        $stmt->execute([$id]);
-        set_flash("Enrollment request has been canceled.");
-    }
-    elseif ($action === 'delete') {
-        $stmt = $pdo->prepare("DELETE FROM enrollments WHERE id = ?");
-        $stmt->execute([$id]);
-        set_flash("Enrollment record has been deleted (treated as canceled).");
+// ===============================
+// Handle Approve / Cancel / Delete
+// ===============================
+if (isset($_GET['action'], $_GET['id'])) {
+    $id = (int) $_GET['id'];
+    $action = strtolower(trim($_GET['action']));
+
+    try {
+        if ($action === 'approve') {
+            $stmt = $pdo->prepare("UPDATE enrollments SET status = 'Approved' WHERE id = ?");
+            $stmt->execute([$id]);
+            set_flash("Enrollment request for ID: $id has been approved.");
+        } elseif ($action === 'cancel') {
+            $stmt = $pdo->prepare("UPDATE enrollments SET status = 'Canceled' WHERE id = ?");
+            $stmt->execute([$id]);
+            set_flash("Enrollment request for ID: $id has been canceled.");
+        } elseif ($action === 'delete') {
+            $stmt = $pdo->prepare("DELETE FROM enrollments WHERE id = ?");
+            $stmt->execute([$id]);
+            set_flash("Enrollment record for ID: $id has been permanently deleted.");
+        }
+    } catch (PDOException $e) {
+        set_flash("Database Error: Unable to perform $action on enrollment.", 'error');
     }
 
     header('Location: enrollments.php');
     exit;
 }
 
-// Fetch all enrollments with course title
+// ===============================
+// Fetch Pending Enrollments
+// ===============================
 $stmt = $pdo->query("
     SELECT e.*, c.title AS course_name
     FROM enrollments e
     LEFT JOIN courses c ON e.course_id = c.id
+    WHERE e.status = 'Pending'
     ORDER BY e.created_at DESC
 ");
-$enrollments = $stmt->fetchAll();
+$enrollments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $flash = get_flash();
 ?>
@@ -47,81 +56,118 @@ $flash = get_flash();
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Admin - Manage Enrollments</title>
+    <title>Admin - Manage Enrollment Requests</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
-<body>
-<?php include __DIR__ . '/header_admin.php'; ?>
+<body class="bg-gray-50 min-h-screen">
 
-<div class="container mx-auto p-6">
+<div class="flex">
+    <!-- Sidebar / Header -->
+    <?php include __DIR__ . '/header_admin.php'; ?>
 
-    <h1 class="text-3xl font-bold mb-6">Manage Course Enrollments</h1>
-
-    <!-- Flash message -->
-    <?php if ($flash): ?>
-        <div class="p-4 mb-6 rounded <?= $flash['type'] === 'error'
-            ? 'bg-red-200 text-red-800'
-            : 'bg-green-200 text-green-800' ?>">
-            <?= e($flash['message']) ?>
+    <main class="flex-1 p-8">
+        <!-- Page Header -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8 flex items-center justify-between border-b-4 border-indigo-600">
+            <div class="flex items-center">
+                <span class="material-icons text-4xl text-indigo-600 mr-4">how_to_reg</span>
+                <h1 class="text-3xl font-extrabold text-gray-800">New Enrollment Requests</h1>
+            </div>
+            <p class="text-lg text-gray-500">
+                Pending Approvals: <strong><?= count($enrollments) ?></strong>
+            </p>
         </div>
-    <?php endif; ?>
 
-    <!-- Enrollments Table -->
-    <div class="bg-white shadow-md rounded p-6 overflow-x-auto">
-        <table class="w-full border-collapse">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="border p-2 text-center">#</th>
-                    <th class="border p-2 text-left">Name</th>
-                    <th class="border p-2 text-left">Email</th>
-                    <th class="border p-2 text-left">Location</th>
-                    <th class="border p-2 text-left">Phone</th>
-                    <th class="border p-2 text-left">Course</th>
-                    <th class="border p-2 text-left">Payment Method</th>
-                    <th class="border p-2 text-left">Transaction ID</th>
-                    <th class="border p-2 text-center">Status</th>
-                    <th class="border p-2 text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php $i = 1; foreach ($enrollments as $row): ?>
+        <!-- Flash Message -->
+        <?php if ($flash): ?>
+            <div class="mb-6 p-4 rounded-lg font-medium shadow-md
+                <?= $flash['type'] === 'error'
+                    ? 'bg-red-100 text-red-700 border border-red-300'
+                    : 'bg-green-100 text-green-700 border border-green-300' ?>">
+                <?= e($flash['message']) ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Enrollment Table -->
+        <div class="bg-white shadow-xl rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100">
                     <tr>
-                        <td class="border p-2 text-center"><?= $i++ ?></td>
-                        <td class="border p-2"><?= e($row['name']) ?></td>
-                        <td class="border p-2"><?= e($row['email'] ?? 'N/A') ?></td>
-                        <td class="border p-2"><?= e($row['location'] ?? 'N/A') ?></td>
-                        <td class="border p-2"><?= e($row['phone'] ?? 'N/A') ?></td>
-                        <td class="border p-2"><?= e($row['course_name'] ?? 'N/A') ?></td>
-                        <td class="border p-2"><?= e($row['payment_method']) ?></td>
-                        <td class="border p-2"><?= e($row['bkash_txn_id'] ?? 'N/A') ?></td>
-                        <td class="border p-2 text-center">
-                            <?php if (strtolower($row['status']) === 'approved'): ?>
-                                <span class="text-green-700 font-bold">Approved</span>
-                            <?php elseif (strtolower($row['status']) === 'canceled'): ?>
-                                <span class="text-red-700 font-bold">Canceled</span>
-                            <?php else: ?>
-                                <span class="text-yellow-700 font-bold">Pending</span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="border p-2 text-center space-x-2">
-                            <?php if (strtolower($row['status']) !== 'approved'): ?>
-                                <a href="?action=approve&id=<?= $row['id'] ?>"
-                                   class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Approve</a>
-                            <?php endif; ?>
-                            <?php if (strtolower($row['status']) !== 'canceled'): ?>
-                                <a href="?action=cancel&id=<?= $row['id'] ?>"
-                                   class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700">Cancel</a>
-                            <?php endif; ?>
-                            <a href="?action=delete&id=<?= $row['id'] ?>"
-                               onclick="return confirm('Are you sure you want to delete this enrollment? This action cannot be undone.');"
-                               class="bg-red-700 text-white px-3 py-1 rounded hover:bg-red-800">Delete</a>
-                        </td>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">#</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Student & Contact</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Course</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Payment Details</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Requested On</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
+                </thead>
 
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <?php if (empty($enrollments)): ?>
+                        <tr>
+                            <td colspan="7" class="px-6 py-8 text-center text-lg text-gray-500 font-medium">
+                                <span class="material-icons text-4xl text-green-400 mb-2">check_circle_outline</span><br>
+                                All clear! No pending enrollment requests at this time.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php $i = 1; foreach ($enrollments as $row): ?>
+                            <tr class="<?= $i % 2 === 0 ? 'bg-gray-50' : 'bg-white' ?> hover:bg-indigo-50 transition duration-150">
+                                <!-- Index -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?= $i++ ?></td>
+
+                                <!-- Student Info -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-semibold text-gray-900"><?= e($row['name']) ?></div>
+                                    <div class="text-xs text-gray-600">Email: <?= e($row['email'] ?? 'N/A') ?></div>
+                                    <div class="text-xs text-gray-600">Phone: <?= e($row['phone'] ?? 'N/A') ?></div>
+                                    <div class="text-xs text-gray-600">Location: <?= e($row['location'] ?? 'N/A') ?></div>
+                                </td>
+
+                                <!-- Course -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
+                                    <?= e($row['course_name'] ?? 'Course Deleted') ?>
+                                </td>
+
+                                <!-- Payment -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-800"><?= e($row['payment_method']) ?></div>
+                                    <div class="text-xs text-gray-500">TXN ID: <?= e($row['bkash_txn_id'] ?? 'N/A') ?></div>
+                                </td>
+
+                                <!-- Status -->
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-yellow-100 text-yellow-800">
+                                        <?= e(ucfirst($row['status'])) ?>
+                                    </span>
+                                </td>
+
+                                <!-- Requested On -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                    <?= date('M d, Y', strtotime($row['created_at'])) ?>
+                                </td>
+
+                                <!-- Actions -->
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-y-2">
+                                    <a href="?action=approve&id=<?= $row['id'] ?>"
+                                       class="inline-flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition duration-150 shadow-md">
+                                        <span class="material-icons text-base mr-1">done</span> Approve
+                                    </a>
+                                    <a href="?action=delete&id=<?= $row['id'] ?>"
+                                       onclick="return confirm('Are you sure you want to PERMANENTLY delete this enrollment record?');"
+                                       class="inline-flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition duration-150 shadow-md">
+                                        <span class="material-icons text-base mr-1">delete</span> Delete
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </main>
 </div>
+
 </body>
 </html>
