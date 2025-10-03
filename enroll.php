@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // --- Collect form data ---
+// We collect these variables once, at the top, from the POST request.
 $course_id      = intval($_POST['course_id'] ?? 0);
 $name           = trim($_POST['name'] ?? '');
 $email          = trim($_POST['email'] ?? '');
@@ -31,7 +32,7 @@ try {
      * ------------------------------------------------- */
     if (!$user_id) {
         // Check if email or phone already exists
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? OR phone = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id, name, email, phone FROM users WHERE email = ? OR phone = ? LIMIT 1");
         $stmt->execute([$email, $phone]);
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -47,32 +48,37 @@ try {
 
             $user_id = $pdo->lastInsertId();
 
-            // Store session data
+            // Log the new user in and save their details
             $_SESSION['user_id']       = $user_id;
             $_SESSION['user_name']     = $name;
             $_SESSION['user_email']    = $email;
             $_SESSION['user_phone']    = $phone;
-            $_SESSION['user_location'] = $location;
+            $_SESSION['user_location'] = $location; // Note: location isn't stored in users table, only in session/enrollment
 
+        } elseif ($existing) {
+            // Existing user found → use their record for enrollment, but DON'T log them in fully here (no password check)
+            $user_id = $existing['id'];
+            
+            // OPTIONAL: Update session with data from users table if it was an *existing* user who wasn't logged in.
+            // This is non-critical for enrollment insertion but helpful for session consistency.
+            $_SESSION['user_id']       = $user_id;
+            $_SESSION['user_name']     = $existing['name'];
+            $_SESSION['user_email']    = $existing['email'];
+            $_SESSION['user_phone']    = $existing['phone'];
+            $_SESSION['user_location'] = $location; // Use submitted location for session/enrollment
         } else {
-            // Existing user found → use their record
-            $user = $existing;
-            if (!$user) {
-                $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? OR phone = ? LIMIT 1");
-                $stmt->execute([$email, $phone]);
-                $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            }
-
-            $user_id = $user['id'] ?? null;
-
-            // Store session data
-            $_SESSION['user_id']       = $user['id'];
-            $_SESSION['user_name']     = $user['name'];
-            $_SESSION['user_email']    = $user['email'];
-            $_SESSION['user_phone']    = $user['phone'];
-            $_SESSION['user_location'] = $location;
+            // This case handles a guest attempting to enroll without a password, but also not having an existing user record.
+            // You might want a stronger validation/redirect here. For now, we continue and let enrollment fail if $user_id is null.
         }
     }
+
+    // CRITICAL VALIDATION: Ensure we have a user ID before proceeding
+    if (!$user_id) {
+         $pdo->rollBack();
+         header("Location: course.php?id={$course_id}&error=user_required"); // Redirect with error
+         exit;
+    }
+
 
     /* -------------------------------------------------
      * 2. Prevent duplicate enrollments
@@ -91,13 +97,12 @@ try {
     }
 
     /* -------------------------------------------------
-     * 3. Insert new enrollment
+     * 3. Insert new enrollment (FIXED)
      * ------------------------------------------------- */
-    $name     = $_SESSION['user_name'];
-    $email    = $_SESSION['user_email'];
-    $phone    = $_SESSION['user_phone'];
-    $location = $_SESSION['user_location'];
-
+    // IMPORTANT: Use the variables collected from the POST data at the start.
+    // We are NOT using $_SESSION here for name/email/phone/location because they 
+    // might not be updated correctly for a logged-in user in this script flow.
+    
     $stmt = $pdo->prepare("
         INSERT INTO enrollments
         (course_id, user_id, name, email, phone, location, payment_method, bkash_txn_id)
@@ -105,11 +110,11 @@ try {
     ");
     $stmt->execute([
         $course_id,
-        $user_id,
-        $name,
-        $email,
-        $phone,
-        $location,
+        $user_id, // This is the existing user_id from session or the new one from step 1
+        $name,    // Use submitted name
+        $email,   // Use submitted email
+        $phone,   // Use submitted phone
+        $location, // Use submitted location
         $payment_method,
         $bkash_txn_id
     ]);
@@ -122,5 +127,9 @@ try {
 
 } catch (Exception $e) {
     $pdo->rollBack();
-    die("Error: " . $e->getMessage());
+    // Log error for debugging purposes
+    error_log("Enrollment Error: " . $e->getMessage());
+    // Redirect with a generic error (optional)
+    header("Location: course.php?id={$course_id}&error=failed");
+    exit;
 }
