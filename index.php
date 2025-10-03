@@ -75,74 +75,14 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
   </div>
 </section>
 
-<!--about us-->
+<!-- About Us Section -->
+<?php
 
-<section id="about-us" class="bg-gray-50 py-16 px-4 sm:px-6 lg:px-8 text-blue-900">
-    <div class="max-w-7xl mx-auto">
-        <h2 class="text-4xl font-extrabold text-gray-900 mb-12 text-center">About At-Tatweer Institute</h2>
+// This line includes the entire content of the about_us.php file
+include 'about.php';
 
-        <div class="flex flex-col lg:flex-row lg:space-x-12 space-y-12 lg:space-y-0">
-
-            <!-- Left Column -->
-            <div 
-                class="lg:w-1/2 flex flex-col justify-center opacity-0 lg:animate-slide-in-left"
-                data-aos="fade-right" 
-                data-aos-duration="1000" 
-                data-aos-once="true"
-            >
-                <h3 class="text-2xl font-bold ilm-text-gold mb-4">Our Mission</h3>
-                <p class="text-gray-900 mb-6">
-                    At-Tatweer Institute is a trusted and pioneering online platform dedicated to academic Islamic education with a modern vision. Our mission is to empower students with authentic Islamic knowledge while equipping them with the intellectual and professional skills necessary to excel in today’s world.
-                </p>
-                <p class="text-gray-900">
-                    Under the direct supervision of distinguished scholars from Al-Azhar University, we provide a well-structured learning environment where traditional Islamic sciences are taught alongside contemporary subjects. This unique approach ensures that students develop a strong foundation in faith, character, and knowledge — including recitation and memorization of the Holy Qur’an, Aqeedah, Hadith, Tafsir, Fiqh, Arabic literature, and spoken English — while also preparing them to meet the challenges of modern society.
-                </p>
-            </div>
-
-            <!-- Right Column -->
-            <div 
-                class="lg:w-1/2 flex flex-col justify-center opacity-0 lg:animate-slide-in-right"
-                data-aos="fade-left" 
-                data-aos-duration="1000" 
-                data-aos-once="true"
-            >
-                <h3 class="text-2xl font-bold  ilm-text-gold mb-4">Our Commitment</h3>
-                <ul class="list-disc pl-5 text-gray-900 mb-6 space-y-2">
-                    <li>Authentic Islamic scholarship guided by world-renowned scholars</li>
-                    <li>Modern academic and professional courses tailored to today’s needs</li>
-                    <li>Well-structured online classes and resources accessible from anywhere in the world</li>
-                    <li>A student-centered approach with personalized guidance and mentorship</li>
-                    <li>A safe, reliable, and inspiring environment for learners of all ages</li>
-                </ul>
-
-                <h3 class="text-2xl font-bold ilm-text-gold mb-4">What Makes Us Different</h3>
-                <ul class="list-disc pl-5 text-gray-900 space-y-2">
-                    <li>A recognized and reliable source of authentic Islamic education</li>
-                    <li>A unique balance between Islamic tradition and modern learning</li>
-                    <li>Direct access to qualified, reputable, and internationally respected instructors</li>
-                    <li>Opportunities for both children and adults to learn with excellence from the comfort of their homes</li>
-                </ul>
-            </div>
-        </div>
-
-        <p class="mt-12 text-center text-gray-700 text-lg opacity-0 lg:animate-slide-in-left" data-aos="fade-up" data-aos-duration="1000" data-aos-once="true">
-            At-Tatweer Institute is more than just an educational platform — it is a gateway to building a future rooted in knowledge, values, and excellence. <br>
-            <strong>Join us today and take the first step toward a transformative learning experience that nurtures both faith and intellect.</strong>
-        </p>
-    </div>
-</section>
-
-<script>
-    // Initialize AOS
-    AOS.init({
-        once: true, // animation happens only once when scrolling
-        disable: function() {
-            // Disable AOS for desktop (min-width: 1024px)
-            return window.innerWidth >= 1024;
-        }
-    });
-</script>
-
+// ... rest of your index.php code, e.g., the footer include ...
+?>
 
 
 <!--courses-->
