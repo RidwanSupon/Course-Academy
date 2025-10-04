@@ -340,8 +340,6 @@ include 'sections/about.php';
 </a>
 </section>
 
----
-
 <section id="reviews" class="bg-white py-16 px-6 mx-auto">
     <h2 class="text-4xl font-extrabold ilm-text-gold mb-10 text-center">Student Reviews</h2>
 
