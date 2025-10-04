@@ -9,7 +9,7 @@ require_once __DIR__ . '/../includes/functions.php';
 require_admin();
 
 // Ensure $pdo is available, presumably from includes/functions.php or a config file it includes.
-global $pdo; 
+global $pdo;
 
 // --- Fetch Dashboard Counts ---
 try {
@@ -95,56 +95,59 @@ $dashboard_cards = [
 ?>
 <!doctype html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
+
 <body class="bg-gray-50 min-h-screen">
 
-<div class="flex">
-    <?php include __DIR__ . '/header_admin.php'; ?>
+    <div class="flex">
+        <?php include __DIR__ . '/header_admin.php'; ?>
 
-    <main class="flex-1 p-8">
-        
-        <div class="bg-white p-6 rounded-lg shadow-xl mb-8 border-b-4 border-indigo-600">
-            <h1 class="text-3xl font-extrabold text-gray-800 flex items-center">
-                <span class="material-icons text-4xl text-indigo-600 mr-3">admin_panel_settings</span>
-                System Overview
-            </h1>
-            <p class="text-gray-500 mt-2">Quick summary of site activity and content statistics.</p>
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <?php foreach ($dashboard_cards as $card): ?>
-                <?php 
+        <main class="flex-1 p-8">
+
+            <div class="bg-white p-6 rounded-lg shadow-xl mb-8 border-b-4 border-indigo-600">
+                <h1 class="text-3xl font-extrabold text-gray-800 flex items-center">
+                    <span class="material-icons text-4xl text-indigo-600 mr-3">admin_panel_settings</span>
+                    System Overview
+                </h1>
+                <p class="text-gray-500 mt-2">Quick summary of site activity and content statistics.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <?php foreach ($dashboard_cards as $card): ?>
+                    <?php
                     $color = $card['color'];
                     $border = "border-{$color}-600";
                     $icon_bg = "bg-{$color}-100";
                     $icon_text = "text-{$color}-600";
                     $count_text = "text-{$color}-700";
                     $hover_bg = "hover:bg-{$color}-50";
-                ?>
-                <a href="<?= htmlspecialchars($card['link']) ?>" class="block">
-                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 <?= $border ?> flex items-center space-x-4 transition duration-300 ease-in-out <?= $hover_bg ?>">
-                        <div class="flex-shrink-0 p-3 rounded-full <?= $icon_bg ?> <?= $icon_text ?>">
-                            <span class="material-icons text-3xl"><?= htmlspecialchars($card['icon']) ?></span>
-                        </div>
-                        <div class="flex-1">
-                            <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                                <?= htmlspecialchars($card['label']) ?>
+                    ?>
+                    <a href="<?= htmlspecialchars($card['link']) ?>" class="block">
+                        <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 <?= $border ?> flex items-center space-x-4 transition duration-300 ease-in-out <?= $hover_bg ?>">
+                            <div class="flex-shrink-0 p-3 rounded-full <?= $icon_bg ?> <?= $icon_text ?>">
+                                <span class="material-icons text-3xl"><?= htmlspecialchars($card['icon']) ?></span>
                             </div>
-                            <div class="text-3xl font-extrabold <?= $count_text ?>">
-                                <?= htmlspecialchars($card['count']) ?>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                                    <?= htmlspecialchars($card['label']) ?>
+                                </div>
+                                <div class="text-3xl font-extrabold <?= $count_text ?>">
+                                    <?= htmlspecialchars($card['count']) ?>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </a>
-            <?php endforeach; ?>
-        </div>
-        
+                    </a>
+                <?php endforeach; ?>
+            </div>
+
         </main>
-</div>
+    </div>
 </body>
+
 </html>

@@ -40,7 +40,7 @@ $userLocation   = $isLoggedIn ? ($_SESSION['user_location'] ?? '') : '';
 
 
 // =========================================================================
-// === REVIEW LOGIC (NEW) ===
+// === REVIEW LOGIC (MODIFIED FOR DELETE OPTION) ===
 // =========================================================================
 
 // 1. Fetch Average Rating and Total Reviews
@@ -56,10 +56,11 @@ $avg_rating = round($review_stats['avg_rating'] ?? 0, 1);
 $total_reviews = $review_stats['total_reviews'];
 
 
-// 2. Check Enrollment and Review Status for the CURRENT user
+// 2. Check Enrollment and Review Status for the CURRENT user (MODIFIED)
 $alreadyEnrolled = false;
 $is_enrolled_and_approved = false;
 $has_reviewed = false;
+$existing_review_id = 0; // NEW: To store the review ID for deletion
 
 if ($isLoggedIn) {
     // Check if user is enrolled (any status)
@@ -70,13 +71,16 @@ if ($isLoggedIn) {
     $alreadyEnrolled = $enrollment_record ? true : false;
     $is_enrolled_and_approved = ($enrollment_record && $enrollment_record['status'] === 'Approved');
 
-    // Check if user has already submitted a review
-    $checkReview = $pdo->prepare("SELECT id FROM course_reviews WHERE user_id=? AND course_id=?");
+    // Check if user has already submitted a review AND FETCH ITS ID (MODIFIED)
+    $checkReview = $pdo->prepare("SELECT id FROM course_reviews WHERE user_id=? AND course_id=? LIMIT 1");
     $checkReview->execute([$userID, $course_id]);
-    $has_reviewed = $checkReview->fetch() ? true : false;
+    $review_record = $checkReview->fetch(PDO::FETCH_ASSOC);
+
+    $has_reviewed = $review_record ? true : false;
+    $existing_review_id = $review_record['id'] ?? 0;
 }
 
-// 3. Fetch list of APPROVED reviews for display
+// 3. Fetch list of APPROVED reviews for display (No Change)
 $stmtReviews = $pdo->prepare("
     SELECT r.*, u.name AS reviewer_name
     FROM course_reviews r
@@ -121,7 +125,9 @@ $errorMessage = '';
 if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
     $successMessage = '🎉 Your Free Class Request has been submitted! We will contact you soon.';
 } elseif (isset($_GET['review_submitted']) && $_GET['review_submitted'] === 'true') {
-    $successMessage = '✨ Thank you! Your review has been submitted successfully and is awaiting admin approval.';
+    $successMessage = '✨ Thank you! Your review has been submitted successfully.';
+} elseif (isset($_GET['review_deleted']) && $_GET['review_deleted'] === 'true') {
+    $successMessage = '🗑️ Your review has been successfully deleted.';
 } elseif (isset($_GET['error'])) {
     switch ($_GET['error']) {
         // --- Review Errors (NEW) ---
@@ -133,7 +139,8 @@ if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
             break;
         case 'invalid_review_data':
         case 'db_error':
-            $errorMessage = 'An error occurred while processing your review. Please try again.';
+        case 'delete_failed':
+            $errorMessage = 'An error occurred while processing your review request. Please try again.';
             break;
         // --- Enrollment/Request Errors (Existing) ---
         case 'already_requested':
@@ -238,7 +245,7 @@ if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
                     <img src="assets/uploads/mentors/<?= htmlspecialchars($course['mentor_photo'] ?? 'default.png') ?>" 
                         alt="<?= htmlspecialchars($course['mentor_name']) ?>" 
                         class="w-20 h-20 object-cover rounded-full ring-4 ring-ilm-gold/50 group-hover:ring-ilm-gold">
-                            
+                                
                     <div>
                         <span class="text-xl font-extrabold text-ilm-blue group-hover:text-indigo-700 transition block">
                             <?= htmlspecialchars($course['mentor_name']) ?>
@@ -319,7 +326,7 @@ if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
 
         <?php if ($isLoggedIn && $is_enrolled_and_approved && !$has_reviewed): ?>
             <div class="review-form-section mt-10 p-6 border-2 border-green-500 rounded-xl bg-green-50 shadow-md">
-                <h3 class="text-2xl font-semibold mb-4 text-green-700">✍️ Submit Your Review</h3>
+                <h3 class="text-2xl font-semibold mb-4 text-green-700">Submit Your Review</h3>
                 <form action="process_review.php" method="POST">
                     <input type="hidden" name="course_id" value="<?= $course_id ?>">
                     <input type="hidden" name="user_id" value="<?= $userID ?>">
@@ -338,7 +345,7 @@ if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
                     <div class="mb-4">
                         <label for="review_text" class="block text-gray-700 font-medium mb-2">Your Feedback</label>
                         <textarea id="review_text" name="review_text" rows="4" required 
-                                  class="p-3 border-2 border-gray-300 rounded-lg w-full focus:border-green-500 focus:ring-2 focus:ring-green-200"></textarea>
+                                    class="p-3 border-2 border-gray-300 rounded-lg w-full focus:border-green-500 focus:ring-2 focus:ring-green-200"></textarea>
                     </div>
 
                     <button type="submit" name="submit_review" 
@@ -348,9 +355,20 @@ if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
                 </form>
             </div>
         <?php elseif ($isLoggedIn && $has_reviewed): ?>
-            <p class="mt-8 p-4 bg-yellow-100 text-yellow-700 border border-yellow-300 rounded-xl">
-                📝 You have already submitted a review for this course. It is visible below once approved by the admin.
-            </p>
+            <div class="mt-8 p-4 bg-yellow-100 text-yellow-700 border border-yellow-300 rounded-xl flex justify-between items-center">
+                <p class="font-medium">
+                    📝 You have already submitted a review for this course.
+                </p>
+                <form action="process_review.php" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete your review?');">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="review_id" value="<?= $existing_review_id ?>">
+                    <input type="hidden" name="course_id" value="<?= $course_id ?>">
+                    <button type="submit" name="delete_review" 
+                            class="bg-red-500 text-white py-2 px-4 rounded-full font-bold shadow-md hover:bg-red-600 transition duration-300 text-sm">
+                        Delete Review
+                    </button>
+                </form>
+            </div>
         <?php elseif (!$isLoggedIn): ?>
             <p class="mt-8 p-4 bg-blue-100 text-blue-700 border border-blue-300 rounded-xl">
                 Login to submit your review after enrolling in this course.
@@ -527,7 +545,7 @@ function openFreeClassModal() {
 
 // Clear enrollment message URL params on load if no success/error is active, 
 // to prevent them from showing on refresh if not handled by a banner.
-if (urlParams.has('enrolled') || urlParams.has('free_requested') || urlParams.has('error') || urlParams.has('review_submitted')) {
+if (urlParams.has('enrolled') || urlParams.has('free_requested') || urlParams.has('error') || urlParams.has('review_submitted') || urlParams.has('review_deleted')) {
     // If a banner message is showing, don't clear the URL until the user acknowledges or navigates.
     // The closeModal function will handle cleaning the URL.
 } else {
