@@ -105,25 +105,24 @@ $email_link = "mailto:" . htmlspecialchars($email_address);
 <main class="relative">
 
 <section class="relative w-full overflow-hidden">
-    <div class="relative w-full h-[350px] sm:h-[450px] md:h-[550px] lg:h-[650px] bg-gray-100 shadow-xl">
+    <div class="relative w-full h-[500px] sm:h-[400px] md:h-[500px] lg:h-[500px] bg-gray-100 shadow-xl">
         
         <?php foreach($banners as $i => $b): ?>
             <div class="banner-slide absolute inset-0 transition-opacity duration-700 ease-in-out <?= $i===0 ? 'opacity-100 z-10' : 'opacity-0 z-0' ?>">
                 
                 <img src="assets/uploads/banners/<?= htmlspecialchars($b['image']) ?>" 
-                    alt="<?= htmlspecialchars($b['title'] ?? 'E-commerce Banner') ?>" 
+                    alt="<?= htmlspecialchars($b['title'] ?? 'Academy Banner') ?>" 
                     class="w-full h-full object-cover object-center">
-
-                <div class="absolute inset-0 bg-black/30 flex flex-col justify-center items-start text-left px-8 sm:px-12 md:px-20 lg:px-32">
+                <div class="absolute inset-0 bg-black/40 flex flex-col justify-center items-start text-left px-6 sm:px-12 md:px-20 lg:px-32">
                     <div class="max-w-xl">
                         <?php if(!empty($b['title'])): ?>
-                            <h2 class="text-white text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight mb-3 drop-shadow-md leading-tight">
+                            <h2 class="text-white text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-2 drop-shadow-lg leading-snug">
                                 <?= htmlspecialchars($b['title']) ?>
                             </h2>
                         <?php endif; ?>
                         
                         <?php if(!empty($b['subtitle'])): ?>
-                            <p class="text-gray-100 text-lg sm:text-xl md:text-2xl mt-2 mb-6 font-medium drop-shadow-sm">
+                            <p class="text-gray-100 text-base sm:text-lg md:text-xl mt-2 mb-4 font-medium drop-shadow-sm">
                                 <?= htmlspecialchars($b['subtitle']) ?>
                             </p>
                         <?php endif; ?>
@@ -132,16 +131,70 @@ $email_link = "mailto:" . htmlspecialchars($email_address);
                 </div>
             </div>
         <?php endforeach; ?>
+
         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
             <?php foreach($banners as $i => $b): ?>
-                <button class="slide-indicator w-3 h-3 rounded-full transition duration-300 <?= $i===0 ? 'bg-white' : 'bg-white/50 hover:bg-white' ?>" data-slide-index="<?= $i ?>"></button>
+                <button class="slide-indicator w-3 h-3 rounded-full transition duration-300 <?= $i===0 ? 'bg-green-500' : 'bg-white/50 hover:bg-green-500/70' ?>" data-slide-index="<?= $i ?>"></button>
             <?php endforeach; ?>
         </div>
 
     </div>
 </section>
+<script>
+    // Get all slides and indicator buttons
+    const slides = document.querySelectorAll('.banner-slide');
+    const indicators = document.querySelectorAll('.slide-indicator');
+    const totalSlides = slides.length;
+    let currentSlide = 0; // The index of the currently visible slide
 
----
+    if (totalSlides > 0) {
+        // Function to show a specific slide
+        function showSlide(index) {
+            // Remove active classes from all slides and indicators
+            slides.forEach(slide => {
+                slide.classList.remove('opacity-100', 'z-10');
+                slide.classList.add('opacity-0', 'z-0');
+            });
+            indicators.forEach(indicator => {
+                // Tailwind classes for active/inactive state
+                indicator.classList.remove('bg-white', 'bg-green-500'); // Assuming green-500 is your active color
+                indicator.classList.add('bg-white/50', 'hover:bg-white'); 
+            });
+
+            // Add active classes to the target slide and indicator
+            slides[index].classList.remove('opacity-0', 'z-0');
+            slides[index].classList.add('opacity-100', 'z-10');
+            
+            indicators[index].classList.remove('bg-white/50', 'hover:bg-white');
+            // NOTE: Use 'bg-white' or the color you used in your CSS for the active indicator
+            indicators[index].classList.add('bg-white'); 
+
+            currentSlide = index;
+        }
+
+        // --- 1. Dot Button Click Functionality ---
+        indicators.forEach(indicator => {
+            indicator.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.slideIndex);
+                showSlide(index);
+                // Reset the auto-slide timer when manually changing slide
+                clearInterval(slideInterval);
+                slideInterval = setInterval(nextSlide, 5000); // 5 seconds interval
+            });
+        });
+
+        // --- 2. Auto Slide Functionality ---
+        function nextSlide() {
+            let nextIndex = (currentSlide + 1) % totalSlides;
+            showSlide(nextIndex);
+        }
+
+        // Start the automatic slide transition (e.g., every 5 seconds)
+        let slideInterval = setInterval(nextSlide, 5000); // 5000 milliseconds = 5 seconds
+    }
+</script>
+
+
 
 <?php
 // This line includes the entire content of the about_us.php file
@@ -370,7 +423,6 @@ include 'sections/about.php';
 </section>
 
 </main>
-<?php include 'includes/footer.php'; ?>
 
 <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <script>
@@ -465,5 +517,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<?php include 'includes/footer.php'; ?>
 </body>
 </html>
