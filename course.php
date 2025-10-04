@@ -1,5 +1,5 @@
 <?php
-// course.php - Display Course Details and handle enrollment/free class logic
+// course.php - Display Course Details and handle enrollment/free class/review logic
 
 require_once __DIR__ . '/config.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 // Get course ID
 $course_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// === UPDATED: Fetch course details AND JOIN with mentors table ===
+// === Fetch course details AND JOIN with mentors table ===
 $stmt = $pdo->prepare("
     SELECT 
         c.*, 
@@ -28,7 +28,7 @@ if (!$course) {
 }
 // Check if a mentor is linked
 $mentorLinked = !empty($course['mentor_id']) && !empty($course['mentor_name']);
-// === END OF UPDATED FETCH ===
+// === END OF COURSE FETCH ===
 
 // User session data
 $isLoggedIn     = !empty($_SESSION['user_id']);
@@ -38,13 +38,59 @@ $userEmail      = $isLoggedIn ? ($_SESSION['user_email'] ?? '')    : '';
 $userPhone      = $isLoggedIn ? ($_SESSION['user_phone'] ?? '')    : '';
 $userLocation   = $isLoggedIn ? ($_SESSION['user_location'] ?? '') : '';
 
-// Check if user already enrolled
+
+// =========================================================================
+// === REVIEW LOGIC (NEW) ===
+// =========================================================================
+
+// 1. Fetch Average Rating and Total Reviews
+$stmtAvg = $pdo->prepare("
+    SELECT AVG(rating) AS avg_rating, COUNT(id) AS total_reviews 
+    FROM course_reviews 
+    WHERE course_id = ? AND status = 'Approved'
+");
+$stmtAvg->execute([$course_id]);
+$review_stats = $stmtAvg->fetch(PDO::FETCH_ASSOC);
+
+$avg_rating = round($review_stats['avg_rating'] ?? 0, 1);
+$total_reviews = $review_stats['total_reviews'];
+
+
+// 2. Check Enrollment and Review Status for the CURRENT user
 $alreadyEnrolled = false;
+$is_enrolled_and_approved = false;
+$has_reviewed = false;
+
 if ($isLoggedIn) {
-    $check = $pdo->prepare("SELECT id FROM enrollments WHERE user_id=? AND course_id=?");
-    $check->execute([$userID, $course_id]);
-    $alreadyEnrolled = $check->fetch() ? true : false;
+    // Check if user is enrolled (any status)
+    $checkEnroll = $pdo->prepare("SELECT status FROM enrollments WHERE user_id=? AND course_id=?");
+    $checkEnroll->execute([$userID, $course_id]);
+    $enrollment_record = $checkEnroll->fetch(PDO::FETCH_ASSOC);
+    
+    $alreadyEnrolled = $enrollment_record ? true : false;
+    $is_enrolled_and_approved = ($enrollment_record && $enrollment_record['status'] === 'Approved');
+
+    // Check if user has already submitted a review
+    $checkReview = $pdo->prepare("SELECT id FROM course_reviews WHERE user_id=? AND course_id=?");
+    $checkReview->execute([$userID, $course_id]);
+    $has_reviewed = $checkReview->fetch() ? true : false;
 }
+
+// 3. Fetch list of APPROVED reviews for display
+$stmtReviews = $pdo->prepare("
+    SELECT r.*, u.name AS reviewer_name
+    FROM course_reviews r
+    JOIN users u ON r.user_id = u.id
+    WHERE r.course_id = ? AND r.status = 'Approved'
+    ORDER BY r.created_at DESC
+");
+$stmtReviews->execute([$course_id]);
+$reviews = $stmtReviews->fetchAll(PDO::FETCH_ASSOC);
+
+// =========================================================================
+// === END OF REVIEW LOGIC ===
+// =========================================================================
+
 
 // Check for existing Free Class Request (optional, but good for UX)
 $alreadyRequested = false;
@@ -74,13 +120,27 @@ $successMessage = '';
 $errorMessage = '';
 if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
     $successMessage = '🎉 Your Free Class Request has been submitted! We will contact you soon.';
+} elseif (isset($_GET['review_submitted']) && $_GET['review_submitted'] === 'true') {
+    $successMessage = '✨ Thank you! Your review has been submitted successfully and is awaiting admin approval.';
 } elseif (isset($_GET['error'])) {
     switch ($_GET['error']) {
+        // --- Review Errors (NEW) ---
+        case 'already_reviewed':
+            $errorMessage = '⚠️ You have already submitted a review for this course.';
+            break;
+        case 'not_enrolled':
+            $errorMessage = '❌ You must be an approved, enrolled student to leave a review.';
+            break;
+        case 'invalid_review_data':
+        case 'db_error':
+            $errorMessage = 'An error occurred while processing your review. Please try again.';
+            break;
+        // --- Enrollment/Request Errors (Existing) ---
         case 'already_requested':
             $errorMessage = '⚠️ You already have an active Free Class request for this course.';
             break;
         case 'missing_fields':
-            $errorMessage = '❌ Please fill in all required fields for the Free Class Request.';
+            $errorMessage = '❌ Please fill in all required fields.';
             break;
         case 'request_failed':
             $errorMessage = 'An error occurred while submitting your request. Please try again.';
@@ -176,9 +236,9 @@ if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
                    class="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition duration-200 group shadow-md">
                     
                     <img src="assets/uploads/mentors/<?= htmlspecialchars($course['mentor_photo'] ?? 'default.png') ?>" 
-                         alt="<?= htmlspecialchars($course['mentor_name']) ?>" 
-                         class="w-20 h-20 object-cover rounded-full ring-4 ring-ilm-gold/50 group-hover:ring-ilm-gold">
-                         
+                        alt="<?= htmlspecialchars($course['mentor_name']) ?>" 
+                        class="w-20 h-20 object-cover rounded-full ring-4 ring-ilm-gold/50 group-hover:ring-ilm-gold">
+                            
                     <div>
                         <span class="text-xl font-extrabold text-ilm-blue group-hover:text-indigo-700 transition block">
                             <?= htmlspecialchars($course['mentor_name']) ?>
@@ -193,7 +253,7 @@ if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
                 </a>
             </div>
             <?php endif; ?>
-            </div>
+        </div>
 
         <div class="lg:col-span-1 bg-gradient-to-br from-ilm-blue to-indigo-900 rounded-3xl shadow-2xl shadow-ilm-gold/50 border-t-8 border-ilm-gold p-8 h-fit order-1 lg:order-2">
             <h2 class="text-2xl font-extrabold text-white mb-6 pb-4 border-b border-white/20">
@@ -224,8 +284,101 @@ if (isset($_GET['free_requested']) && $_GET['free_requested'] === 'true') {
             </div>
         </div>
     </div>
+    
+    <div class="bg-white rounded-3xl shadow-xl p-10 mb-12 border border-gray-100">
+        <h2 class="text-4xl font-extrabold text-blue-900 mb-8 pb-3 border-b-4 border-ilm-gold inline-block">
+            Student Reviews (<?= $total_reviews ?>)
+        </h2>
 
-<div class="text-center mb-20">
+        <?php if ($total_reviews > 0): ?>
+            <div class="flex items-center space-x-4 mb-8">
+                <span class="text-5xl font-black text-ilm-gold"><?= $avg_rating ?></span>
+                <div class="flex flex-col">
+                    <div class="text-xl text-yellow-500">
+                        <?php 
+                        // Simple star display based on avg_rating
+                        $fullStars = floor($avg_rating);
+                        $hasHalf = ($avg_rating - $fullStars) >= 0.5;
+                        for ($i = 0; $i < 5; $i++) {
+                            if ($i < $fullStars) {
+                                echo '★';
+                            } elseif ($i == $fullStars && $hasHalf) {
+                                echo '½'; // Placeholder for half-star
+                            } else {
+                                echo '☆'; // Empty star
+                            }
+                        }
+                        ?>
+                    </div>
+                    <span class="text-gray-600 text-sm italic">Based on <?= $total_reviews ?> approved reviews</span>
+                </div>
+            </div>
+        <?php else: ?>
+            <p class="text-gray-600 text-lg mb-8">No reviews yet. Be the first to share your experience!</p>
+        <?php endif; ?>
+
+        <?php if ($isLoggedIn && $is_enrolled_and_approved && !$has_reviewed): ?>
+            <div class="review-form-section mt-10 p-6 border-2 border-green-500 rounded-xl bg-green-50 shadow-md">
+                <h3 class="text-2xl font-semibold mb-4 text-green-700">✍️ Submit Your Review</h3>
+                <form action="process_review.php" method="POST">
+                    <input type="hidden" name="course_id" value="<?= $course_id ?>">
+                    <input type="hidden" name="user_id" value="<?= $userID ?>">
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">Rating (1-5)</label>
+                        <select name="rating" required class="p-2 border-2 border-gray-300 rounded-lg w-full md:w-1/4 text-gray-800">
+                            <option value="5">5 Stars (Excellent) ⭐⭐⭐⭐⭐</option>
+                            <option value="4">4 Stars (Very Good) ⭐⭐⭐⭐</option>
+                            <option value="3">3 Stars (Good) ⭐⭐⭐</option>
+                            <option value="2">2 Stars (Fair) ⭐⭐</option>
+                            <option value="1">1 Star (Poor) ⭐</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="review_text" class="block text-gray-700 font-medium mb-2">Your Feedback</label>
+                        <textarea id="review_text" name="review_text" rows="4" required 
+                                  class="p-3 border-2 border-gray-300 rounded-lg w-full focus:border-green-500 focus:ring-2 focus:ring-green-200"></textarea>
+                    </div>
+
+                    <button type="submit" name="submit_review" 
+                            class="bg-green-600 text-white py-2 px-6 rounded-full font-bold shadow-lg hover:bg-green-700 transition duration-300">
+                        Post Review
+                    </button>
+                </form>
+            </div>
+        <?php elseif ($isLoggedIn && $has_reviewed): ?>
+            <p class="mt-8 p-4 bg-yellow-100 text-yellow-700 border border-yellow-300 rounded-xl">
+                📝 You have already submitted a review for this course. It is visible below once approved by the admin.
+            </p>
+        <?php elseif (!$isLoggedIn): ?>
+            <p class="mt-8 p-4 bg-blue-100 text-blue-700 border border-blue-300 rounded-xl">
+                Login to submit your review after enrolling in this course.
+            </p>
+        <?php endif; ?>
+
+        <div class="mt-12 space-y-8">
+            <h3 class="text-2xl font-extrabold text-ilm-blue border-b pb-2">What Students Say</h3>
+            <?php if (empty($reviews)): ?>
+                <p class="text-gray-500">No approved reviews to display yet.</p>
+            <?php else: ?>
+                <?php foreach ($reviews as $review): ?>
+                    <div class="border-b border-gray-100 pb-6">
+                        <div class="flex items-center mb-2">
+                            <span class="font-bold text-gray-800 mr-3"><?= htmlspecialchars($review['reviewer_name']) ?></span>
+                            <span class="text-yellow-500 text-lg font-bold">
+                                <?= str_repeat('★', $review['rating']) . str_repeat('☆', 5 - $review['rating']) ?>
+                            </span>
+                        </div>
+                        <p class="text-gray-700 italic leading-relaxed">"<?= nl2br(htmlspecialchars($review['review_text'])) ?>"</p>
+                        <span class="text-xs text-gray-400 block mt-2">Reviewed on <?= date('M d, Y', strtotime($review['created_at'])) ?></span>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <div class="text-center mb-20">
         <button onclick="openFreeClassModal()" class="bg-white border-4 border-ilm-blue text-ilm-blue px-10 py-3 rounded-full font-extrabold text-lg shadow-xl hover:bg-ilm-blue hover:text-white transition-all duration-300 <?= $alreadyEnrolled ? 'opacity-50 cursor-not-allowed' : '' ?>" <?= $alreadyEnrolled ? 'disabled' : '' ?>>
             <?= $alreadyRequested ? 'Request Already Submitted' : 'Request Free Class Demo' ?>
         </button>
@@ -374,7 +527,7 @@ function openFreeClassModal() {
 
 // Clear enrollment message URL params on load if no success/error is active, 
 // to prevent them from showing on refresh if not handled by a banner.
-if (urlParams.has('enrolled') || urlParams.has('free_requested') || urlParams.has('error')) {
+if (urlParams.has('enrolled') || urlParams.has('free_requested') || urlParams.has('error') || urlParams.has('review_submitted')) {
     // If a banner message is showing, don't clear the URL until the user acknowledges or navigates.
     // The closeModal function will handle cleaning the URL.
 } else {
