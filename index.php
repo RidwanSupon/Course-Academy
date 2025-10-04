@@ -49,32 +49,43 @@ $videos = fetchData($pdo, "SELECT * FROM videos ORDER BY created_at DESC");
 <main class="relative">
 
 <!-- Banner Slider -->
-<!-- Banner Slider -->
 <section class="relative w-full overflow-hidden">
-  <div class="relative w-full h-[300px] sm:h-[400px] md:h-[500px]">
+  <div class="relative w-full h-[350px] sm:h-[450px] md:h-[550px] lg:h-[650px] bg-gray-100 shadow-xl">
+    
     <?php foreach($banners as $i => $b): ?>
-      <div class="banner-slide absolute inset-0 transition-all duration-700 ease-in-out <?= $i===0 ? 'opacity-100 z-10' : 'opacity-0 z-0' ?>">
+      <div class="banner-slide absolute inset-0 transition-opacity duration-700 ease-in-out <?= $i===0 ? 'opacity-100 z-10' : 'opacity-0 z-0' ?>">
+        
         <img src="assets/uploads/banners/<?= htmlspecialchars($b['image']) ?>" 
-             alt="<?= htmlspecialchars($b['title'] ?? 'Banner') ?>" 
-             class="w-full h-full object-cover">
+              alt="<?= htmlspecialchars($b['title'] ?? 'E-commerce Banner') ?>" 
+              class="w-full h-full object-cover object-center">
 
-        <div class="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center px-4">
-          <?php if(!empty($b['title'])): ?>
-            <h2 class="text-white text-xl sm:text-2xl md:text-4xl font-bold drop-shadow-lg">
-              <?= htmlspecialchars($b['title']) ?>
-            </h2>
-          <?php endif; ?>
-          <?php if(!empty($b['subtitle'])): ?>
-            <p class="text-white text-sm sm:text-base md:text-lg mt-2 drop-shadow-lg max-w-lg">
-              <?= htmlspecialchars($b['subtitle']) ?>
-            </p>
-          <?php endif; ?>
+        <div class="absolute inset-0 bg-black/30 flex flex-col justify-center items-start text-left px-8 sm:px-12 md:px-20 lg:px-32">
+          <div class="max-w-xl">
+            <?php if(!empty($b['title'])): ?>
+              <h2 class="text-white text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight mb-3 drop-shadow-md leading-tight">
+                <?= htmlspecialchars($b['title']) ?>
+              </h2>
+            <?php endif; ?>
+            
+            <?php if(!empty($b['subtitle'])): ?>
+              <p class="text-gray-100 text-lg sm:text-xl md:text-2xl mt-2 mb-6 font-medium drop-shadow-sm">
+                <?= htmlspecialchars($b['subtitle']) ?>
+              </p>
+            <?php endif; ?>
+            
+            </a>
+          </div>
         </div>
       </div>
     <?php endforeach; ?>
+    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+      <?php foreach($banners as $i => $b): ?>
+        <button class="slide-indicator w-3 h-3 rounded-full transition duration-300 <?= $i===0 ? 'bg-white' : 'bg-white/50 hover:bg-white' ?>" data-slide-index="<?= $i ?>"></button>
+      <?php endforeach; ?>
+    </div>
+
   </div>
 </section>
-
 <!-- About Us Section -->
 <?php
 
@@ -179,9 +190,48 @@ include 'sections/about.php';
         <iframe class="w-full h-full" src="https://www.youtube.com/embed/<?= htmlspecialchars($youtube_id) ?>" title="<?= htmlspecialchars($video['title']) ?>" frameborder="0" allowfullscreen></iframe>
       </div>
     <?php endforeach; ?>
-  </div>
-  <a href="videos.php" class="inline-block ilm-bg-gold text-ilm-blue py-2 px-6 rounded-lg font-bold hover:opacity-90 transition mb-10">See All Videos</a>
+  </div><a href="videos.php" 
+  class="
+    /* Layout & Positioning */
+    inline-block 
+    
+    /* Typography */
+    text-white 
+    text-lg 
+    font-extrabold 
+    uppercase 
+    tracking-wider 
 
+    /* Spacing & Shape */
+    py-3 
+    px-10 
+    rounded-full /* Pill shape */
+    mb-10 
+
+    /* The Fancy Part: Gradient & Shadow */
+    bg-gradient-to-r 
+    from-amber-400 
+    to-orange-600 
+    shadow-lg 
+    shadow-amber-500/50 
+    
+    /* Hover & Transition Effects */
+    transition-all 
+    duration-300 
+    ease-in-out 
+    hover:scale-105 
+    hover:shadow-xl 
+    hover:shadow-orange-400/70
+    hover:ring-4
+    hover:ring-amber-300/50
+
+    /* Active State (for a slight press effect) */
+    active:scale-100
+    active:shadow-lg
+  "
+>
+  See All Videos
+</a>
   <h2 class="text-4xl font-extrabold ilm-text-gold mb-4">Photo Gallery</h2>
 
   <!-- Slider After Photo Gallery Heading -->
@@ -197,8 +247,6 @@ include 'sections/about.php';
         <?php endforeach; ?>
       </div>
     </div>
-    <button onclick="prevSlide()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">❮</button>
-    <button onclick="nextSlide()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">❯</button>
   </div>
 
   <!-- Photo Grid -->
@@ -209,7 +257,47 @@ include 'sections/about.php';
       </div>
     <?php endforeach; ?>
   </div>
-  <a href="gallery.php" class="inline-block ilm-bg-gold text-ilm-blue py-2 px-6 rounded-lg font-bold hover:opacity-90 transition">See All Photos</a>
+<a href="gallery.php" 
+  class="
+    /* Layout & Positioning */
+    inline-block 
+    
+    /* Typography */
+    text-white 
+    text-lg 
+    font-extrabold 
+    uppercase 
+    tracking-wider 
+    
+    /* Spacing & Shape */
+    py-3 
+    px-10 
+    rounded-full /* Pill shape */
+    
+    /* The Fancy Part: Gradient & Shadow */
+    bg-gradient-to-r 
+    from-amber-400 
+    to-orange-600 
+    shadow-lg 
+    shadow-amber-500/50 
+    
+    /* Hover & Transition Effects */
+    transition-all 
+    duration-300 
+    ease-in-out 
+    hover:scale-105 
+    hover:shadow-xl 
+    hover:shadow-orange-400/70
+    hover:ring-4
+    hover:ring-amber-300/50
+
+    /* Active State (for a slight press effect) */
+    active:scale-100
+    active:shadow-lg
+  "
+>
+  See All Photos
+</a>
 </section>
 
 <script>

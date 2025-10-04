@@ -11,8 +11,17 @@ require_admin();
 global $pdo;
 
 $errors = [];
-// Use the flash function for success/error messages
 $flash = get_flash(); 
+
+// --- Data Fetching: Mentors List ---
+// Fetch all mentor IDs and names for the new dropdown selection
+$mentorsList = [];
+try {
+    $stmtMentors = $pdo->query("SELECT id, name FROM mentors ORDER BY name ASC");
+    $mentorsList = $stmtMentors->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // In a real application, you'd log this error
+}
 
 // --- Form Submission Handling (Add and Update) ---
 
@@ -22,7 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $title = trim($_POST['title'] ?? '');
     $short_desc = trim($_POST['short_desc'] ?? '');
     $long_desc = trim($_POST['long_desc'] ?? '');
-    $teacher = trim($_POST['teacher'] ?? '');
+    // === UPDATED: Get mentor_id instead of teacher name ===
+    $mentor_id = intval($_POST['mentor_id'] ?? 0); 
     $gender = in_array($_POST['gender'] ?? 'Both', ['Male', 'Female', 'Both']) ? $_POST['gender'] : 'Both';
     $price = is_numeric($_POST['price'] ?? '') ? number_format((float)$_POST['price'], 2, '.', '') : '0.00';
     $duration = trim($_POST['duration'] ?? '');
@@ -32,15 +42,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $errors[] = "Course Title is required.";
     }
 
+    // Set $teacher to the name of the selected mentor (optional, for backward compatibility/display)
+    $teacher = 'N/A';
+    foreach($mentorsList as $m) {
+        if ($m['id'] == $mentor_id) {
+            $teacher = $m['name'];
+            break;
+        }
+    }
+
+
     if (empty($errors)) {
         try {
             if ($action === 'add') {
-                $stmt = $pdo->prepare("INSERT INTO courses (title, short_desc, long_desc, teacher, gender, price, duration, active) VALUES (?,?,?,?,?,?,?,?)");
-                $stmt->execute([$title, $short_desc, $long_desc, $teacher, $gender, $price, $duration, $active]);
+                // IMPORTANT: Insert 'teacher' as a fallback/redundant field, use 'mentor_id' for linking
+                $stmt = $pdo->prepare("INSERT INTO courses (title, short_desc, long_desc, mentor_id, teacher, gender, price, duration, active) VALUES (?,?,?,?,?,?,?,?,?)");
+                $stmt->execute([$title, $short_desc, $long_desc, $mentor_id, $teacher, $gender, $price, $duration, $active]);
                 set_flash("Course **{$title}** added successfully.");
             } elseif ($action === 'update' && $id > 0) {
-                $stmt = $pdo->prepare("UPDATE courses SET title=?, short_desc=?, long_desc=?, teacher=?, gender=?, price=?, duration=?, active=? WHERE id=?");
-                $stmt->execute([$title, $short_desc, $long_desc, $teacher, $gender, $price, $duration, $active, $id]);
+                $stmt = $pdo->prepare("UPDATE courses SET title=?, short_desc=?, long_desc=?, mentor_id=?, teacher=?, gender=?, price=?, duration=?, active=? WHERE id=?");
+                $stmt->execute([$title, $short_desc, $long_desc, $mentor_id, $teacher, $gender, $price, $duration, $active, $id]);
                 set_flash("Course **{$title}** updated successfully.");
             }
             // Redirect to the main page to prevent form resubmission
@@ -58,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
     try {
-        // warn: enrollments might have FK ON DELETE CASCADE so related enrollments will be removed automatically
         $pdo->prepare("DELETE FROM courses WHERE id = ?")->execute([$id]);
         set_flash("Course deleted successfully. (Related enrollments also deleted if applicable.)");
     } catch (PDOException $e) {
@@ -87,20 +107,20 @@ if (isset($_GET['toggle'])) {
     exit;
 }
 
-// --- Data Fetching ---
+// --- Data Fetching: Course for Edit ---
 
-// fetch course for edit if requested
 $edit_course = null;
 if (isset($_GET['edit'])) {
     $id = intval($_GET['edit']);
     $stmt = $pdo->prepare("SELECT * FROM courses WHERE id=? LIMIT 1");
     $stmt->execute([$id]);
     $edit_course = $stmt->fetch();
-    // Re-fetch flash messages if form errors occurred on an update attempt
     $flash = get_flash(); 
 }
 
-// fetch all courses, joining with a count of active enrollments for context
+// --- Data Fetching: All Courses ---
+
+// Fetch all courses, joining with a count of active enrollments
 $courses = $pdo->query("
     SELECT 
         c.*, 
@@ -176,8 +196,20 @@ $courses = $pdo->query("
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Teacher/Instructor</label>
-                            <input type="text" name="teacher" value="<?= e($edit_course['teacher'] ?? '') ?>" class="w-full border border-gray-300 p-3 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Teacher/Instructor (Mentor ID)</label>
+                            <select name="mentor_id" class="w-full border border-gray-300 p-3 rounded-lg bg-white">
+                                <option value="0">-- Select Mentor (Optional) --</option>
+                                <?php 
+                                $current_mentor_id = $edit_course['mentor_id'] ?? 0;
+                                foreach ($mentorsList as $mentor): 
+                                ?>
+                                    <option value="<?= intval($mentor['id']) ?>" 
+                                        <?= $current_mentor_id == $mentor['id'] ? 'selected' : '' ?>>
+                                        <?= e($mentor['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input type="hidden" name="teacher" value="<?= e($edit_course['teacher'] ?? '') ?>"> 
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Gender Focus</label>
@@ -216,6 +248,7 @@ $courses = $pdo->query("
                         <?php endif; ?>
                     </div>
                 </form>
+                
             </section>
 
             <section class="xl:w-2/3 space-y-4">
@@ -249,7 +282,7 @@ $courses = $pdo->query("
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-gray-700 border-t border-gray-100 pt-3">
                                 <div><span class="font-medium">Price:</span> <span class="text-indigo-600 font-semibold">$<?= number_format((float)$c['price'], 2) ?></span></div>
                                 <div><span class="font-medium">Duration:</span> <?= e($c['duration'] ?: '—') ?></div>
-                                <div><span class="font-medium">Teacher:</span> <?= e($c['teacher'] ?: '—') ?></div>
+                                <div><span class="font-medium">Teacher:</span> <?= e($c['teacher'] ?: '—') ?></div> 
                                 <div><span class="font-medium">Gender:</span> <?= e($c['gender']) ?></div>
                             </div>
                             
@@ -261,8 +294,8 @@ $courses = $pdo->query("
                                     <span class="material-icons text-lg mr-1">person_add</span> Enrolled (<?= $c['enrollment_count'] ?>)
                                 </a>
                                 <a href="?delete=<?= intval($c['id']) ?>" 
-                                   onclick="return confirm('WARNING: Delete course <?= e($c['title']) ?>? This action is irreversible and will delete all <?= $c['enrollment_count'] ?> related enrollments.');" 
-                                   class="text-red-600 hover:text-red-700 flex items-center font-medium">
+                                    onclick="return confirm('WARNING: Delete course <?= e($c['title']) ?>? This action is irreversible and will delete all <?= $c['enrollment_count'] ?> related enrollments.');" 
+                                    class="text-red-600 hover:text-red-700 flex items-center font-medium">
                                     <span class="material-icons text-lg mr-1">delete</span> Delete
                                 </a>
                             </div>

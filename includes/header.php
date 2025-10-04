@@ -22,9 +22,9 @@ if(session_status() === PHP_SESSION_NONE){
     </style>
 </head>
 <body>
-
-<header class="ilm-bg-blue p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-lg">
-    
+<header class="fixed top-0 w-full z-50 shadow-lg ilm-bg-blue">
+    <div class="max-w-7xl mx-auto p-4 flex justify-between items-center">
+            
     <div class="flex items-center space-x-3">
         <img src="assets/images/logo.png" alt="Logo" class="h-10">
         <div class="flex flex-col">
@@ -71,12 +71,15 @@ if(session_status() === PHP_SESSION_NONE){
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
         </svg>
     </button>
+
+        </div>
 </header>
 
 <div id="mobile-menu" class="fixed inset-0 ilm-bg-blue z-40 transform translate-x-full transition-transform duration-300 ease-in-out pt-20 md:hidden">
     <div class="p-8 flex flex-col space-y-6">
         <nav class="flex flex-col space-y-4">
             <a href="index.php#home" class="text-white text-xl p-2 rounded-lg hover:ilm-bg-gold transition">Home</a>
+            <a href="my-courses.php" class="text-white text-xl p-2 rounded-lg hover:ilm-bg-gold transition">My Courses</a>
             <a href="index.php#courses" class="text-white text-xl p-2 rounded-lg hover:ilm-bg-gold transition">Courses</a>
             <a href="mentors.php" class="text-white text-xl p-2 rounded-lg hover:ilm-bg-gold transition">Mentors</a>
             <a href="index.php#board" class="text-white text-xl p-2 rounded-lg hover:ilm-bg-gold transition">Board</a>
